@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const WS_URL = "wss://your-app.onrender.com"; // Replace with your Render WebSocket URL
+const WS_URL = "wss://retro-app-8uhn.onrender.com"; // Replace with your Render WebSocket URL
 
 const RetroBoard = () => {
   const [messages, setMessages] = useState<string[]>([]);
