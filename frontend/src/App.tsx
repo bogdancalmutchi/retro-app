@@ -6,15 +6,32 @@ const RetroBoard = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [note, setNote] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const socket = new WebSocket(WS_URL);
 
-    socket.onopen = () => console.log("Connected to WebSocket");
-    socket.onmessage = (event) => {
-      setMessages((prev) => [...prev, event.data]);
+    socket.onopen = () => {
+      console.log("Connected to WebSocket");
+      setIsConnected(true);
     };
-    socket.onclose = () => console.log("Disconnected");
+
+    socket.onmessage = (event) => {
+      const messageData = JSON.parse(event.data);
+
+      if (messageData.type === "history") {
+        // When a new client connects, receive message history
+        setMessages(messageData.messages);
+      } else if (messageData.type === "message") {
+        // New message from another user
+        setMessages((prev) => [...prev, messageData.data]);
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("Disconnected from WebSocket");
+      setIsConnected(false);
+    };
 
     setWs(socket);
 
@@ -22,7 +39,7 @@ const RetroBoard = () => {
   }, []);
 
   const sendMessage = () => {
-    if (ws && note.trim()) {
+    if (ws && isConnected && note.trim()) {
       ws.send(note);
       setNote("");
     }
@@ -37,7 +54,9 @@ const RetroBoard = () => {
         onChange={(e) => setNote(e.target.value)}
         placeholder="Write a note..."
       />
-      <button onClick={sendMessage}>Send</button>
+      <button onClick={sendMessage} disabled={!isConnected}>
+        Send
+      </button>
       <ul>
         {messages.map((msg, i) => (
           <li key={i}>{msg}</li>
