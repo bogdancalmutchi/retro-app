@@ -1,5 +1,6 @@
 {
-  "name": "frontend",
+  "name": "retro-app",
+  "homepage": "https://bogdancalmutchi.github.io/retro-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
