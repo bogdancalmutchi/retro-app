@@ -1,19 +1,20 @@
-import WebSocket from 'ws';
-import dotenv from 'dotenv';
+const WebSocket = require('ws');
+const dotenv = require('dotenv');
 
+// Load environment variables from .env file
 dotenv.config();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 6666;
 const server = new WebSocket.Server({ port: Number(PORT) });
 
-server.on('connection', (ws: any) => {
+server.on('connection', (ws) => {
   console.log('New client connected');
 
-  ws.on('message', (message: any) => {
+  ws.on('message', (message) => {
     console.log(`Received: ${message}`);
 
     // Broadcast to all clients
-    server.clients.forEach((client: any) => {
+    server.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message.toString());
       }

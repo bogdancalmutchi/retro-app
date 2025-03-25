@@ -1,28 +1,12 @@
 {
   "name": "retro-websocket-server",
   "version": "1.0.0",
-  "description": "WebSocket server for Sprint Retrospectives",
-  "main": "dist/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "build": "tsc",
-    "dev": "ts-node-dev src/server.ts",
-    "predeploy": "npm run build"
+    "start": "node server.js"
   },
   "dependencies": {
-    "dotenv": "^10.0.0",
-    "ws": "^8.0.0"
-  },
-  "devDependencies": {
-    "@types/dotenv": "^8.2.3",
-    "@types/ws": "^8.18.0",
-    "ts-node": "^10.0.0",
-    "ts-node-dev": "^1.1.8",
-    "typescript": "^4.5.0"
-  },
-  "engines": {
-    "node": "18.x"
-  },
-  "author": "",
-  "license": "ISC"
+    "ws": "^8.7.0",
+    "dotenv": "^16.0.0"
+  }
 }
