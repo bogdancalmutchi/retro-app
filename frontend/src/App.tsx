@@ -35,7 +35,18 @@ const RetroBoard = () => {
 
     setWs(socket);
 
-    return () => socket.close();
+    // Set up ping to keep connection alive every 30 seconds
+    const pingInterval = setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 30000); // Ping every 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pingInterval); // Clear the interval when the component is unmounted
+      socket.close();
+    };
   }, []);
 
   const sendMessage = () => {

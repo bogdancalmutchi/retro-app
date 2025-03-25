@@ -17,6 +17,11 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
     console.log('Received:', message);
 
+    // Handle ping message from client
+    if (message === '{"type":"ping"}') {
+      return; // Ignore the ping message
+    }
+
     // Save the message as a string
     messages.push(message.toString()); // Convert to string if it's a buffer
     clients.forEach((client) => {
