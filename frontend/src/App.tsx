@@ -19,12 +19,19 @@ const RetroBoard = () => {
     socket.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
 
-      if (messageData.type === "history") {
-        // When a new client connects, receive message history
-        setMessages(messageData.messages);
-      } else if (messageData.type === "message") {
-        // New message from another user
-        setMessages((prev) => [...prev, messageData.data]);
+      if (messageData.type === "message") {
+        try {
+          const parsedData = JSON.parse(messageData.data); // Attempt to parse messageData.data
+          if (parsedData.type === "ping") {
+            return; // Ignore ping messages
+          }
+          setMessages((prev) => [...prev, messageData.data]); // Add actual messages
+        } catch {
+          setMessages((prev) => [...prev, messageData.data]); // If parsing fails, treat as regular text
+        }
+      } else if (messageData.type === "history") {
+        const filteredMessages = messageData.messages.filter((message: any) => message !== '{"type":"ping"}');
+        setMessages(filteredMessages);
       }
     };
 
@@ -39,6 +46,7 @@ const RetroBoard = () => {
     const pingInterval = setInterval(() => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: "ping" }));
+        console.log('>>> sent ping');
       }
     }, 30000); // Ping every 30 seconds
 
