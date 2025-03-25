@@ -17,11 +17,11 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
     console.log('Received:', message);
 
-    // Save the message and broadcast it to all clients
-    messages.push(message);
+    // Save the message as a string
+    messages.push(message.toString()); // Convert to string if it's a buffer
     clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ type: 'message', data: message }));
+        client.send(JSON.stringify({ type: 'message', data: message.toString() }));
       }
     });
   });
@@ -32,3 +32,4 @@ wss.on('connection', (ws) => {
     clients = clients.filter((client) => client !== ws);
   });
 });
+
