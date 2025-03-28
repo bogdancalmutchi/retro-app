@@ -7,9 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node", "react", "react-dom"],
-    "typeRoots": [
-      "./node_modules/@types",  // Add this line
-      "./node_modules/react"     // Add this line for react types
-    ]
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["dom", "esnext"]
   }
 }
