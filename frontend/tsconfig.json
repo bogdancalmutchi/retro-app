@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ESNext",  // Changed to ESNext
-    "module": "ESNext",  // Changed to ESNext for better support with Vite
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "jsx": "react-jsx",  // Recommended for React 17+ JSX transform
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "react", "react-dom"]
+    "types": ["node", "react", "react-dom"],
+    "typeRoots": [
+      "./node_modules/@types",  // Add this line
+      "./node_modules/react"     // Add this line for react types
+    ]
   }
 }
