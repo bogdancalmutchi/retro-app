@@ -7,6 +7,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node", "react", "react-dom"],
-    "typeRoots": ["./node_modules/@types"]
-  }
+    "typeRoots": ["./node_modules/@types"],
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "include": ["src"]
 }
