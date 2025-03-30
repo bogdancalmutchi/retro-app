@@ -16,11 +16,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18.19.1
 
       - name: Install dependencies
         run: |
-          cd frontend  # Move into your frontend folder
+          cd frontend
+          rm -rf node_modules package-lock.json
           npm install
 
       - name: Create .env file
@@ -32,6 +33,16 @@ jobs:
           echo "REACT_APP_FIREBASE_STORAGE_BUCKET=${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}" >> .env
           echo "REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "REACT_APP_FIREBASE_APP_ID=${{ secrets.REACT_APP_FIREBASE_APP_ID }}" >> .env
+
+      - name: Verify installed dependencies
+        run: |
+          cd frontend
+          npm list @types/node @types/react @types/react-dom typescript
+
+      - name: Ensure node_modules exists
+        run: |
+          cd frontend
+          if [ ! -d "node_modules" ]; then echo "node_modules missing"; exit 1; fi
 
       - name: Build project
         run: |
