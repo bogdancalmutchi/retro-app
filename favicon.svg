@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
     <rect width="64" height="64" rx="8" ry="8" fill="#ccc"/>
+    <!-- Triangle represents change and improvement (often seen in retrospectives). -->
     <polygon points="32,10 16,40 48,40" fill="#333"/>
+    <!-- Circle symbolizes continuity and iteration. -->
     <circle cx="32" cy="52" r="6" fill="#333"/>
 </svg>
