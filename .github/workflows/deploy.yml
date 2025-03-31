@@ -20,13 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend
           rm -rf node_modules package-lock.json
           npm install
 
       - name: Create .env file
         run: |
-          cd frontend  # Move into your frontend folder
           echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> $GITHUB_ENV
           echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> $GITHUB_ENV
           echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> $GITHUB_ENV
@@ -36,21 +34,18 @@ jobs:
 
       - name: Verify installed dependencies
         run: |
-          cd frontend
           npm list @types/node @types/react @types/react-dom typescript
 
       - name: Ensure node_modules exists
         run: |
-          cd frontend
           if [ ! -d "node_modules" ]; then echo "node_modules missing"; exit 1; fi
 
       - name: Build project
         run: |
-          cd frontend  # Move into your frontend folder
           npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist
+          publish_dir: ./dist
