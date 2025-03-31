@@ -31,7 +31,7 @@ const RetroBoard = () => {
 
   return (
     <div>
-      <h1>Retro Board</h1>
+      <h1>Retro Boardddd</h1>
       <input
         type='text'
         value={note}
