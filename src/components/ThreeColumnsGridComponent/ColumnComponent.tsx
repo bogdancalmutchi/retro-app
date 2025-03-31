@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { Button, Textarea } from '@mantine/core';
 
 import { IMessageType, NoteCategory } from './ThreeColumnsGridComponent';
 
 import styles from './ColumnComponent.module.scss';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconCheck, IconPencil, IconThumbUp, IconTrash } from '@tabler/icons-react';
 
 interface IColumnComponentProps {
   header: string;
@@ -24,6 +24,15 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   } = props;
 
   const [note, setNote] = useState('');
+  const [inEditMode, setInEditMode] = useState(false);
+  const [noteToBeEdited, setNoteToBeEdited] = useState<IMessageType>(undefined);
+  const [newNote, setNewNote] = useState('');
+
+  useEffect(() => {
+    if (inEditMode && noteToBeEdited) {
+      setNewNote(noteToBeEdited.text);
+    }
+  }, [inEditMode, noteToBeEdited]);
 
   const handleSubmit = () => {
     if (note.trim()) {
@@ -40,13 +49,58 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     }
   };
 
+  const handleEdit = async (id: string, newData: object) => {
+    try {
+      const itemRef = doc(db, 'retro-items', id); // Get reference to document
+      await updateDoc(itemRef, newData); // Update Firestore document
+    } catch (error) {
+      console.error('Error updating document:', error);
+    }
+  };
+
+  const handleEditMode = (note: IMessageType) => {
+    setNoteToBeEdited(note);
+    setInEditMode(true);
+  }
+
+  const renderNoteText = (note: IMessageType) => {
+    if (inEditMode && note.id === noteToBeEdited.id) {
+      return (
+        <>
+        <Textarea
+          autosize
+          value={newNote}
+          onChange={(event) => setNewNote(event.target.value)}
+          maxLength={512}
+        />
+          <IconCheck
+            className={styles.icon}
+            size={16}
+            onClick={() => {
+              handleEdit(note.id, {text: newNote})
+              setInEditMode(false);
+            }}
+          />
+        </>
+
+      );
+    }
+    return note.text;
+  };
+
   const renderNoteCard = (note: IMessageType) => {
     return (
       <div>
-        {note.text}
+        {renderNoteText(note)}
         <div className={styles.cardFooter}>
-          <IconPencil size={16} onClick={() => handleDelete(note.id)} />
-          <IconTrash size={16} onClick={() => handleDelete(note.id)} />
+          <div className={styles.likesContainer}>
+            <IconThumbUp className={styles.icon} size={16} onClick={() => handleEdit(note.id, { likes: note.likes + 1 })} />
+            {note.likes > 0 && <span>{note.likes}</span>}
+          </div>
+          <div>
+            <IconPencil className={styles.icon} size={16} onClick={() => handleEditMode(note)} />
+            <IconTrash className={styles.icon} size={16} onClick={() => handleDelete(note.id)} />
+          </div>
         </div>
       </div>
     )

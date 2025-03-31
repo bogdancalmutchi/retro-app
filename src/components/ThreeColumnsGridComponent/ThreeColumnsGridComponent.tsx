@@ -14,6 +14,7 @@ export type IMessageType = {
   id: string;
   text: string;
   category: NoteCategory;
+  likes: number;
 }
 
 interface IThreeGridComponentProps {

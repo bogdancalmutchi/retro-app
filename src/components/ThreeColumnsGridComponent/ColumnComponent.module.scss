@@ -51,8 +51,18 @@
 }
 
 .cardFooter {
-  justify-self: right;
-  > svg {
-    cursor: pointer;
-  }
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.likesContainer {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  cursor: pointer;
 }
