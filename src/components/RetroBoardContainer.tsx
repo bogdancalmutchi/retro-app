@@ -1,51 +1,72 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { collection, onSnapshot, addDoc, query, orderBy, doc, getDoc } from 'firebase/firestore';
+
 import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import ThreeColumnsGridComponent from './ThreeColumnsGridComponent/ThreeColumnsGridComponent';
+import PassphraseComponent from './PassphraseComponent/PassphraseComponent';
 
 const RetroBoardContainer = () => {
-  const [messages, setMessages] = useState<string[]>([]);
-  const [note, setNote] = useState('');
+  const [messages, setMessages] = useState<any[]>([]); // assuming you'll store messages with category info
+  const [passphrase, setPassphrase] = useState('');
+  const [modalOpened, setModalOpened] = useState(true);
 
   useEffect(() => {
-    // Real-time listener for Firestore updates, ordered by createdAt timestamp
-    const dbQuery = query(collection(db, 'retro-items'), orderBy('createdAt'));
+    const dbQuery = query(collection(db, 'retro-items'), orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(dbQuery, (snapshot) => {
-      const retroItems = snapshot.docs.map((doc) => doc.data().text as string);
+      const retroItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       setMessages(retroItems);
     });
+    fetchPassphrase();
 
     return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
-  const sendMessage = async () => {
-    if (note.trim()) {
-      await addDoc(collection(db, 'retro-items'), {
-        text: note,
-        createdAt: serverTimestamp()  // Add timestamp field
-      });
-      setNote('');
+  const fetchPassphrase = async () => {
+    try {
+      const passphraseRef = doc(db, 'settings', 'passphrase');  // Reference to the passphrase document
+      const docSnap = await getDoc(passphraseRef);
+
+      const passphrase = docSnap.data().value;
+      setPassphrase(passphrase);
+    } catch (error) {
+      console.error('Error fetching passphrase:', error);
     }
   };
 
+  const handleAddMessage = async (message: string, category: string) => {
+    try {
+      await addDoc(collection(db, 'retro-items'), {
+        text: message,
+        category: category, // Categorize the message (Good, Bad, Action Items)
+        createdAt: new Date(),
+      });
+    } catch (error) {
+      console.error("Error adding message: ", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpened(false);
+  };
+
+  const isAccessGranted = localStorage.getItem('accessGranted');
+
   return (
     <div>
-      <h1>Retro Board</h1>
-      <input
-        type='text'
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder='Write a note...'
-      />
-      <button onClick={sendMessage} disabled={!note.trim()}>
-        Send
-      </button>
-      <ul>
-        {messages.map((msg, i) => (
-          <li key={i}>{msg}</li>
-        ))}
-      </ul>
+      {isAccessGranted && <h1>Retro Board</h1>}
+      {!isAccessGranted && <PassphraseComponent
+        fetchedPassphrase={passphrase}
+        onClose={handleCloseModal}
+      />}
+      {isAccessGranted && <ThreeColumnsGridComponent
+        messages={messages}
+        onAddMessage={handleAddMessage}
+      />}
     </div>
   );
 };

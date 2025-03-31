@@ -1,0 +1,58 @@
+.columnContainer {
+  padding: 16px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  height: 100%;
+  width: 100%;
+}
+
+.header {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.inputContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  > div {
+    width: 90%;
+  }
+}
+
+.goodItemContainer,
+.badItemContainer,
+.actionItemContainer,
+.itemContainer {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.goodItemContainer {
+  background-color: rgba(173, 255, 170, 0.67);
+}
+
+.badItemContainer {
+  background-color: rgba(255, 170, 173, 0.67);
+}
+
+.actionItemContainer {
+  background-color: rgba(170, 173, 255, 0.67);
+}
+
+.addNoteButton {
+  min-width: fit-content;
+}
+
+.cardFooter {
+  justify-self: right;
+  > svg {
+    cursor: pointer;
+  }
+}
