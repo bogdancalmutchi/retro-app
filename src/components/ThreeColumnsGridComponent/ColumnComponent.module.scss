@@ -87,6 +87,12 @@
   gap: 8px;
 }
 
+.deleteModalBody {
+  display: flex;
+  gap: 24px;
+  flex-direction: column;
+}
+
 .icon {
   cursor: pointer;
 }

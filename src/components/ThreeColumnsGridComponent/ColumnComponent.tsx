@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { Button, Textarea } from '@mantine/core';
+import { Button, Modal, Textarea, TextInput } from '@mantine/core';
 
 import { INote, NoteCategory } from './ThreeColumnsGridComponent';
 
@@ -27,7 +27,9 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const [note, setNote] = useState('');
   const [inEditMode, setInEditMode] = useState(false);
   const [noteToBeEdited, setNoteToBeEdited] = useState<INote>(undefined);
+  const [noteToBeDeleted, setNoteToBeDeleted] = useState<INote>(undefined);
   const [newNote, setNewNote] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (inEditMode && noteToBeEdited) {
@@ -88,6 +90,30 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const handleEditMode = (note: INote) => {
     setNoteToBeEdited(note);
     setInEditMode(true);
+  };
+
+  const renderDeleteModal = () => {
+    return (
+      <Modal
+        title='Delete Note'
+        withOverlay
+        opened={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <div className={styles.deleteModalBody}>
+          Are you sure you want to delete this note?
+          <Button
+            color='red'
+            onClick={() => {
+              handleDelete(noteToBeDeleted.id);
+              setIsDeleteModalOpen(false);
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      </Modal>
+    )
   };
 
   const renderNoteText = (note: INote) => {
@@ -151,7 +177,10 @@ const ColumnComponent = (props: IColumnComponentProps) => {
           {!inEditMode && (
             <div className={styles.editDeleteContainer}>
               <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
-              <IconTrash className={styles.icon} size={18} onClick={() => handleDelete(note.id)}/>
+              <IconTrash className={styles.icon} size={18} onClick={() => {
+                setNoteToBeDeleted(note);
+                setIsDeleteModalOpen(true);
+              }}/>
             </div>
           )}
         </div>
@@ -193,6 +222,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
       <div className={styles.header}>{header}</div>
       <div className={styles.contentWithInput}>
         {renderInputContainer()}
+        {renderDeleteModal()}
         <div>{messagesList}</div>
       </div>
     </div>
