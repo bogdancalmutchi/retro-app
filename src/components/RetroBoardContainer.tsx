@@ -42,8 +42,10 @@ const RetroBoardContainer = () => {
     try {
       await addDoc(collection(db, 'retro-items'), {
         text: message,
-        category: category, // Categorize the message (Good, Bad, Action Items)
+        category: category, // Categorize the message (Good, Bad, Action Item)
         createdAt: new Date(),
+        likes: 0,
+        dislikes: 0
       });
     } catch (error) {
       console.error("Error adding message: ", error);
@@ -54,7 +56,7 @@ const RetroBoardContainer = () => {
     setModalOpened(false);
   };
 
-  const isAccessGranted = localStorage.getItem('accessGranted');
+  const isAccessGranted = sessionStorage.getItem('accessGranted');
 
   return (
     <div>

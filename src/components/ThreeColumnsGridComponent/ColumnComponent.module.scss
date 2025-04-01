@@ -50,6 +50,7 @@
   min-width: fit-content;
 }
 
+.apCardFooter,
 .cardFooter {
   display: flex;
   justify-content: space-between;
@@ -58,11 +59,42 @@
   margin-top: 8px;
 }
 
+.apCardFooter {
+  justify-content: flex-end;
+}
+
 .likesContainer {
   display: flex;
   align-items: center;
+  gap: 8px;
+  line-height: 14px;
+  & > div {
+    display: flex;
+    align-items: center;
+    min-width: 28px;
+  }
+}
+
+.editDeleteContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.editNoteActionsContainer {
+  display: flex;
+  justify-self: flex-end;
+  margin-top: 8px;
+  gap: 8px;
 }
 
 .icon {
   cursor: pointer;
+}
+
+.activeLikeIcon {
+  stroke: green;
+}
+
+.activeDislikeIcon {
+  stroke: red;
 }

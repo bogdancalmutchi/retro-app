@@ -3,16 +3,17 @@ import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { Button, Textarea } from '@mantine/core';
 
-import { IMessageType, NoteCategory } from './ThreeColumnsGridComponent';
+import { INote, NoteCategory } from './ThreeColumnsGridComponent';
 
 import styles from './ColumnComponent.module.scss';
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { IconCheck, IconPencil, IconThumbUp, IconTrash } from '@tabler/icons-react';
+import { IconCancel, IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash } from '@tabler/icons-react';
+import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
 
 interface IColumnComponentProps {
   header: string;
-  messages: IMessageType[];
+  messages: INote[];
   onSubmit: (message: string) => void;
 }
 
@@ -25,7 +26,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
 
   const [note, setNote] = useState('');
   const [inEditMode, setInEditMode] = useState(false);
-  const [noteToBeEdited, setNoteToBeEdited] = useState<IMessageType>(undefined);
+  const [noteToBeEdited, setNoteToBeEdited] = useState<INote>(undefined);
   const [newNote, setNewNote] = useState('');
 
   useEffect(() => {
@@ -58,12 +59,38 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     }
   };
 
-  const handleEditMode = (note: IMessageType) => {
+  const handleThumbsUp = (note: INote) => {
+    const isNoteAlreadyLiked = getArrayFromLocalStorage('liked').includes(note.id);
+    const isNoteAlreadyDisliked = getArrayFromLocalStorage('disliked').includes(note.id);
+    if (!isNoteAlreadyLiked && !isNoteAlreadyDisliked) {
+      handleEdit(note.id, { likes: note.likes + 1 });
+      addItemToLocalStorage(note.id, 'liked');
+    } else if (isNoteAlreadyLiked) {
+      handleEdit(note.id, { likes: note.likes - 1 });
+      removeItemFromLocalStorage(note.id, 'liked');
+    }
+    return null;
+  };
+
+  const handleThumbsDown = (note: INote) => {
+    const isNoteAlreadyLiked = getArrayFromLocalStorage('liked').includes(note.id);
+    const isNoteAlreadyDisliked = getArrayFromLocalStorage('disliked').includes(note.id);
+    if (!isNoteAlreadyDisliked && !isNoteAlreadyLiked) {
+      handleEdit(note.id, { dislikes: note.dislikes + 1 });
+      addItemToLocalStorage(note.id, 'disliked');
+    } else if (isNoteAlreadyDisliked) {
+      handleEdit(note.id, { dislikes: note.dislikes - 1 });
+      removeItemFromLocalStorage(note.id, 'disliked');
+    }
+    return null;
+  };
+
+  const handleEditMode = (note: INote) => {
     setNoteToBeEdited(note);
     setInEditMode(true);
-  }
+  };
 
-  const renderNoteText = (note: IMessageType) => {
+  const renderNoteText = (note: INote) => {
     if (inEditMode && note.id === noteToBeEdited.id) {
       return (
         <>
@@ -73,34 +100,60 @@ const ColumnComponent = (props: IColumnComponentProps) => {
           onChange={(event) => setNewNote(event.target.value)}
           maxLength={512}
         />
-          <IconCheck
-            className={styles.icon}
-            size={16}
-            onClick={() => {
-              handleEdit(note.id, {text: newNote})
-              setInEditMode(false);
-            }}
-          />
+          <div className={styles.editNoteActionsContainer}>
+            <IconCheck
+              className={styles.icon}
+              size={18}
+              onClick={() => {
+                handleEdit(note.id, {text: newNote})
+                setInEditMode(false);
+              }}
+            />
+            <IconCancel
+              className={styles.icon}
+              size={18}
+              onClick={() => setInEditMode(false)}
+            />
+          </div>
         </>
-
       );
     }
     return note.text;
   };
 
-  const renderNoteCard = (note: IMessageType) => {
+  const renderNoteCard = (note: INote) => {
     return (
       <div>
         {renderNoteText(note)}
-        <div className={styles.cardFooter}>
-          <div className={styles.likesContainer}>
-            <IconThumbUp className={styles.icon} size={16} onClick={() => handleEdit(note.id, { likes: note.likes + 1 })} />
-            {note.likes > 0 && <span>{note.likes}</span>}
-          </div>
-          <div>
-            <IconPencil className={styles.icon} size={16} onClick={() => handleEditMode(note)} />
-            <IconTrash className={styles.icon} size={16} onClick={() => handleDelete(note.id)} />
-          </div>
+        <div className={classNames(styles.cardFooter, {[styles.apCardFooter]: note.category === NoteCategory.ActionItem})}>
+          {note.category !== NoteCategory.ActionItem &&
+            (
+              <div className={styles.likesContainer}>
+                <div>
+                  <IconThumbUp
+                    className={classNames(styles.icon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
+                    size={18}
+                    onClick={() => handleThumbsUp(note)}
+                  />
+                  <div>{note.likes}</div>
+                </div>
+                <div>
+                  <IconThumbDown
+                    className={classNames(styles.icon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
+                    size={18}
+                    onClick={() => handleThumbsDown(note)}
+                  />
+                  <div>{note.dislikes}</div>
+                </div>
+              </div>
+            )
+          }
+          {!inEditMode && (
+            <div className={styles.editDeleteContainer}>
+              <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
+              <IconTrash className={styles.icon} size={18} onClick={() => handleDelete(note.id)}/>
+            </div>
+          )}
         </div>
       </div>
     )

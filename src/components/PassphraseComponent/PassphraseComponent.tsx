@@ -22,7 +22,7 @@ const PassphraseComponent = (props: IPassphraseComponentProps) => {
     if (passphrase === fetchedPassphrase) {
       onClose();
       setIsModalOpen(false);
-      localStorage.setItem('accessGranted', JSON.stringify(true));
+      sessionStorage.setItem('accessGranted', JSON.stringify(true));
     } else {
       setError('Invalid passphrase. Try again.');
     }

@@ -10,15 +10,16 @@ export enum NoteCategory {
   ActionItem = 'action'
 }
 
-export type IMessageType = {
+export interface INote {
   id: string;
   text: string;
   category: NoteCategory;
   likes: number;
+  dislikes: number;
 }
 
 interface IThreeGridComponentProps {
-  messages: IMessageType[];
+  messages: INote[];
   onAddMessage: (message: string, category: string) => void;
 }
 
