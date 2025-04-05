@@ -6,37 +6,35 @@ import styles from './PassphraseModalComponent.module.scss';
 
 interface IPassphraseComponentProps {
   fetchedPassphrase: string;
-  onClose: () => void
+  onAccessGranted: () => void;
 }
 
 const PassphraseModalComponent = (props: IPassphraseComponentProps) => {
   const {
     fetchedPassphrase,
-    onClose
+    onAccessGranted
   } = props;
   const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(true);
 
   const handleSubmit = () => {
     if (passphrase === fetchedPassphrase) {
-      onClose();
-      setIsModalOpen(false);
-      sessionStorage.setItem('accessGranted', JSON.stringify(true));
+      sessionStorage.setItem('accessGranted', 'true');
+      onAccessGranted();
     } else {
       setError('Invalid passphrase. Try again.');
     }
   };
 
   return (
-    <Modal withCloseButton={false} opened={isModalOpen} onClose={onClose} title='Enter Passphrase'>
+    <Modal withCloseButton={false} opened onClose={() => {}} title='Enter Passphrase'>
       <>
         <TextInput
           label='Passphrase'
           value={passphrase}
           onChange={(event) => setPassphrase(event.target.value)}
           type='password'
-          error={error && error}
+          error={error}
           onKeyDown={(event) => event.key === 'Enter' && handleSubmit()}
         />
         <div className={styles.buttonContainer}>

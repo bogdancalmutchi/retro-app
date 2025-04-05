@@ -1,16 +1,28 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, getDocs, query, orderBy, addDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import React from 'react';
+import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
 import { Button } from '@mantine/core';
+
+import { db } from '../firebase';
 import CreateSprintModalComponent from './CreateSprintModalComponent/CreateSprintModalComponent';
+import PassphraseModalComponent from './PassphraseModalComponent/PassphraseModalComponent';
 
 const HomePage = () => {
   const [sprints, setSprints] = useState<any[]>([]);
   const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
+  const [accessGranted, setAccessGranted] = useState(() => {
+    return sessionStorage.getItem('accessGranted') === 'true';
+  });
 
   useEffect(() => {
+    if (accessGranted) {
+      fetchSprints();
+    }
+    fetchPassphrase();
+  }, [accessGranted]);
+
     const fetchSprints = async () => {
       const sprintsRef = collection(db, 'sprints');
       const q = query(sprintsRef, orderBy('createdAt', 'desc'));
@@ -22,8 +34,15 @@ const HomePage = () => {
       setSprints(sprintList);
     };
 
-    fetchSprints();
-  }, []);
+  const fetchPassphrase = async () => {
+    try {
+      const passphraseRef = doc(db, 'settings', 'passphrase');
+      const docSnap = await getDoc(passphraseRef);
+      setPassphrase(docSnap.data()?.value);
+    } catch (error) {
+      console.error('Error fetching passphrase:', error);
+    }
+  };
 
   const renderCreateSprintButton = () => {
     return (
@@ -40,6 +59,15 @@ const HomePage = () => {
     );
   };
 
+   if (!accessGranted) {
+    return (
+      <PassphraseModalComponent
+        fetchedPassphrase={passphrase}
+        onAccessGranted={() => setAccessGranted(true)}
+      />
+    );
+  }
+
   return (
     <div>
       <h1>ProtoTigers Sprint Boards</h1>
@@ -48,9 +76,7 @@ const HomePage = () => {
       <ul>
         {sprints.map((sprint) => (
           <li key={sprint.id}>
-            <Link to={`/sprint/${sprint.id}`}>
-              {sprint.title}
-            </Link>
+            <Link to={`/sprint/${sprint.id}`}>{sprint.title}</Link>
           </li>
         ))}
       </ul>
