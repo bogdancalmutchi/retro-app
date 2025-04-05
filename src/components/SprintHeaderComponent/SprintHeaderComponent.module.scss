@@ -1,0 +1,43 @@
+.headerContainer {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  min-height: 100px;
+}
+
+.header {
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.icon {
+  cursor: pointer;
+}
+
+.disabledIcon {
+  pointer-events: none;
+  cursor: not-allowed;
+  stroke: gray;
+}
+
+.editActionsContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.titleAndButtonContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.backButtonContainer {
+  font-size: 12px;
+  cursor: pointer;
+  color: gray;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { Button, Modal, Textarea, TextInput } from '@mantine/core';
+import { Button, Modal, Textarea } from '@mantine/core';
 
 import { INote, NoteCategory } from './ThreeColumnsGridComponent';
-
+import { useSprint } from '../../contexts/SprintContext';
 import styles from './ColumnComponent.module.scss';
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { IconCancel, IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash } from '@tabler/icons-react';
+import { IconCancel, IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
 import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
 
 interface IColumnComponentProps {
@@ -18,11 +18,9 @@ interface IColumnComponentProps {
 }
 
 const ColumnComponent = (props: IColumnComponentProps) => {
-  const {
-    header,
-    messages,
-    onSubmit
-  } = props;
+  const { header, messages, onSubmit } = props;
+
+  const { sprintId } = useSprint();
 
   const [note, setNote] = useState('');
   const [inEditMode, setInEditMode] = useState(false);
@@ -46,7 +44,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'retro-items', id)); // Delete by Firestore document ID
+      await deleteDoc(doc(db, 'sprints', sprintId, 'items', id)); // Delete by Firestore document ID
     } catch (error) {
       console.error('Error deleting document:', error);
     }
@@ -54,7 +52,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
 
   const handleEdit = async (id: string, newData: object) => {
     try {
-      const itemRef = doc(db, 'retro-items', id); // Get reference to document
+      const itemRef = doc(db, 'sprints', sprintId, 'items', id); // Get reference to document
       await updateDoc(itemRef, newData); // Update Firestore document
     } catch (error) {
       console.error('Error updating document:', error);
@@ -138,7 +136,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                 setInEditMode(false);
               }}
             />
-            <IconCancel
+            <IconX
               className={styles.icon}
               size={18}
               onClick={() => setInEditMode(false)}

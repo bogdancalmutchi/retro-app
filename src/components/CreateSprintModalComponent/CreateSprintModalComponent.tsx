@@ -1,0 +1,83 @@
+import * as React from 'react';
+import { Button, Modal, Select, TextInput } from '@mantine/core';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { useNavigate } from 'react-router-dom';
+
+import styles from './CreateSprintModalComponent.module.scss';
+
+interface ICreateSprintModalComponentProps {
+  isModalOpen: boolean;
+  onClose: () => void;
+}
+
+const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => {
+  const {
+    isModalOpen,
+    onClose
+  } = props;
+
+  const navigate = useNavigate();
+  const [sprintName, setSprintName] = React.useState<string>('');
+  const [sprintTeam, setSprintTeam] = React.useState<string>('');
+
+  const onCreateNewSprintBoard = async () => {
+    try {
+      // Create a new sprint document in Firestore
+      const docRef = await addDoc(collection(db, 'sprints'), {
+        title: sprintName,
+        team: sprintTeam,
+        createdAt: new Date(),
+      });
+
+      // Redirect to the new sprint page
+      navigate(`/sprint/${docRef.id}`);
+    } catch (error) {
+      console.error('Error creating new sprint:', error);
+    }
+  };
+
+  return (
+    <Modal centered opened={isModalOpen} onClose={onClose} title='Create Board'>
+      <div>
+        <div className={styles.modalBodyContainer}>
+          <TextInput
+            label='Sprint Board Name'
+            placeholder='Enter sprint board name'
+            value={sprintName}
+            data-autofocus
+            onChange={(event) => setSprintName(event.target.value)}
+            type='text'
+          />
+          <Select
+            label='Team'
+            placeholder='Pick a team'
+            data={['Protoss', 'Tigers']}
+            searchable
+            checkIconPosition='right'
+            onChange={(option) => setSprintTeam(option)}
+          />
+        </div>
+        <div className={styles.buttonContainer}>
+          <Button
+            variant='outline'
+            onClick={() => {
+              onClose();
+              setSprintName('');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={!sprintName.trim().length || !sprintTeam}
+            onClick={() => onCreateNewSprintBoard()}
+          >
+            Create
+          </Button>
+        </div>
+      </div>
+    </Modal>
+    );
+};
+
+export default CreateSprintModalComponent;

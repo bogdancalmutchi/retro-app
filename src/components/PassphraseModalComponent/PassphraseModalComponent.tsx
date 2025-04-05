@@ -2,14 +2,14 @@ import * as React from 'react';
 import { Button, Modal, TextInput } from '@mantine/core';
 import { useState } from 'react';
 
-import styles from './PassphraseComponent.module.scss';
+import styles from './PassphraseModalComponent.module.scss';
 
 interface IPassphraseComponentProps {
   fetchedPassphrase: string;
   onClose: () => void
 }
 
-const PassphraseComponent = (props: IPassphraseComponentProps) => {
+const PassphraseModalComponent = (props: IPassphraseComponentProps) => {
   const {
     fetchedPassphrase,
     onClose
@@ -29,13 +29,13 @@ const PassphraseComponent = (props: IPassphraseComponentProps) => {
   };
 
   return (
-    <Modal withCloseButton={false} opened={isModalOpen} onClose={onClose} title="Enter Passphrase">
+    <Modal withCloseButton={false} opened={isModalOpen} onClose={onClose} title='Enter Passphrase'>
       <>
         <TextInput
-          label="Passphrase"
+          label='Passphrase'
           value={passphrase}
           onChange={(event) => setPassphrase(event.target.value)}
-          type="password"
+          type='password'
           error={error && error}
           onKeyDown={(event) => event.key === 'Enter' && handleSubmit()}
         />
@@ -47,4 +47,4 @@ const PassphraseComponent = (props: IPassphraseComponentProps) => {
   );
 };
 
-export default PassphraseComponent;
+export default PassphraseModalComponent;

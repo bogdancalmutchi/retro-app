@@ -1,0 +1,12 @@
+.buttonContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modalBodyContainer {
+  display: flex;
+  justify-content: space-between;
+}
