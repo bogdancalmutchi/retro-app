@@ -121,6 +121,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
       return (
         <>
         <Textarea
+          error={!newNote.trim().length && 'Note cannot be empty.'}
           autosize
           value={newNote}
           onChange={(event) => setNewNote(event.target.value)}
@@ -128,10 +129,12 @@ const ColumnComponent = (props: IColumnComponentProps) => {
         />
           <div className={styles.editNoteActionsContainer}>
             <IconCheck
-              className={styles.icon}
+              className={classNames(styles.icon, { [styles.disabledIcon]: (note.text === newNote || !newNote.trim().length) })}
               size={18}
               onClick={() => {
-                handleEdit(note.id, {text: newNote})
+                if (note.text !== newNote && newNote.trim().length) {
+                  handleEdit(note.id, {text: newNote.trim()})
+                }
                 setInEditMode(false);
               }}
             />

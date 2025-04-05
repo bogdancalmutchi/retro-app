@@ -97,6 +97,12 @@
   cursor: pointer;
 }
 
+.disabledIcon {
+  pointer-events: none;
+  cursor: not-allowed;
+  stroke: gray;
+}
+
 .activeLikeIcon {
   stroke: green;
 }
