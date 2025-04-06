@@ -1,16 +1,19 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
-import { Button } from '@mantine/core';
 
-import { db } from '../firebase';
-import CreateSprintModalComponent from './CreateSprintModalComponent/CreateSprintModalComponent';
-import PassphraseModalComponent from './PassphraseModalComponent/PassphraseModalComponent';
-import CardComponent from './CardComponent/CardComponent';
+import { db } from '../../firebase';
+import CreateSprintModalComponent from '../CreateSprintModalComponent/CreateSprintModalComponent';
+import PassphraseModalComponent from '../PassphraseModalComponent/PassphraseModalComponent';
+import CardComponent from '../CardComponent/CardComponent';
+import TabbedHeaderComponent from '../shared/TabbedHeaderComponent/TabbedHeaderComponent';
 
 import styles from './HomePageComponent.module.scss';
 
-const HomePage = () => {
+const HomePageComponent = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedTeam = searchParams.get('team') || 'Protoss';
   const [sprints, setSprints] = useState<any[]>([]);
   const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
   const [passphrase, setPassphrase] = useState('');
@@ -54,6 +57,14 @@ const HomePage = () => {
     setSprints(sprintList);
   };
 
+  const filteredSprints = sprints.filter(
+    (sprint) => sprint.team === selectedTeam
+  );
+
+  const handleTeamChange = (team: string) => {
+    setSearchParams({ team }); // sets ?team=Protoss (or Tigers, etc.)
+  };
+
   const fetchPassphrase = async () => {
     try {
       const passphraseRef = doc(db, 'settings', 'passphrase');
@@ -62,12 +73,6 @@ const HomePage = () => {
     } catch (error) {
       console.error('Error fetching passphrase:', error);
     }
-  };
-
-  const renderCreateSprintButton = () => {
-    return (
-      <Button onClick={() => setIsCreateSprintModalOpen(true)}>Create Board</Button>
-    );
   };
 
   const renderCreateSprintModal = () => {
@@ -90,11 +95,13 @@ const HomePage = () => {
 
   return (
     <div>
-      <h1>ProtoTigers Sprint Boards</h1>
-      {renderCreateSprintButton()}
+      <TabbedHeaderComponent
+        onTabChange={handleTeamChange}
+        onButtonClick={() => setIsCreateSprintModalOpen(true)}
+      />
       {renderCreateSprintModal()}
       <div className={styles.boardContainer}>
-        {sprints.map((sprint) => (
+        {filteredSprints.map((sprint) => (
           <CardComponent
             sprint={sprint}
             key={sprint.id}
@@ -105,4 +112,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default HomePageComponent;

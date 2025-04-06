@@ -1,0 +1,47 @@
+.header {
+  padding-top: var(--mantine-spacing-sm);
+  background-color: var(--mantine-color-gray-0);
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+  margin-bottom: 16px;
+}
+
+.tabsList {
+  &::before {
+    display: none;
+  }
+}
+
+.tab {
+  font-weight: 500;
+  height: 38px;
+  background-color: transparent;
+  position: relative;
+  bottom: -1px;
+
+  &::before,
+  &::after {
+    background-color: var(--mantine-color-gray-2) !important;
+  }
+
+  &:hover {
+    background-color: var(--mantine-color-gray-1);
+  }
+
+  &[data-active] {
+    background-color: var(--mantine-color-white);
+    border-color: var(--mantine-color-gray-2);
+    border-bottom-color: transparent;
+  }
+}
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerText {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}

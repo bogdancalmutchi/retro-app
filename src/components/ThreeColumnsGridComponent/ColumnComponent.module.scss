@@ -1,3 +1,5 @@
+@use '../../scss/global/variables' as *;
+
 .columnContainer {
   padding: 16px;
   background-color: #f0f0f0;
@@ -35,15 +37,15 @@
 }
 
 .goodItemContainer {
-  background-color: rgba(173, 255, 170, 0.67);
+  background-color: $goodItemColor;
 }
 
 .badItemContainer {
-  background-color: rgba(255, 170, 173, 0.67);
+  background-color: $badItemColor;
 }
 
 .actionItemContainer {
-  background-color: rgba(170, 173, 255, 0.67);
+  background-color: $actionItemColor;
 }
 
 .addNoteButton {

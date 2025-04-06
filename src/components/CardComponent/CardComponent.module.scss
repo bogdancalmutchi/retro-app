@@ -1,3 +1,25 @@
+@use '../../scss/global/variables' as *;
+
 .cardContainer {
   min-width: 300px;
+  background-color: #f8f9fa;
+}
+
+.good {
+  color: $goodItemColorVividDark;
+}
+
+.bad {
+  color: $badItemColorVivid;
+}
+
+.action {
+  color: $actionItemColorVivid;
+}
+
+.cardButton {
+  &:hover {
+    background: white;
+    border-color: #4c6ef5;
+  }
 }
