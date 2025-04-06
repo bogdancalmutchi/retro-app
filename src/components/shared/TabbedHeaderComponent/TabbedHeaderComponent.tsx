@@ -40,7 +40,6 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
         <Tabs
           defaultValue='Protoss'
           variant='outline'
-          visibleFrom='sm'
           classNames={{
             root: styles.tabs,
             list: styles.tabsList,
