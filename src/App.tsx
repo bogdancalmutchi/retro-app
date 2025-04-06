@@ -11,7 +11,7 @@ const App = () => {
   return (
     <MantineProvider defaultColorScheme='light'>
       <SprintProvider>
-        <BrowserRouter basename='/retro-app'>
+        <BrowserRouter basename='/retro-app/'>
           <Routes>
             <Route path='/' element={<HomePage />} />
             <Route path='/sprint/:sprintId' element={<SprintBoardComponent />} />

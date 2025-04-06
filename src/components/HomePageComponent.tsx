@@ -1,12 +1,14 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
 import { Button } from '@mantine/core';
 
 import { db } from '../firebase';
 import CreateSprintModalComponent from './CreateSprintModalComponent/CreateSprintModalComponent';
 import PassphraseModalComponent from './PassphraseModalComponent/PassphraseModalComponent';
+import CardComponent from './CardComponent/CardComponent';
+
+import styles from './HomePageComponent.module.scss';
 
 const HomePage = () => {
   const [sprints, setSprints] = useState<any[]>([]);
@@ -23,16 +25,34 @@ const HomePage = () => {
     fetchPassphrase();
   }, [accessGranted]);
 
-    const fetchSprints = async () => {
-      const sprintsRef = collection(db, 'sprints');
-      const q = query(sprintsRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const sprintList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setSprints(sprintList);
-    };
+  const fetchSprints = async () => {
+    const sprintsRef = collection(db, 'sprints');
+    const q = query(sprintsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    const sprintList = await Promise.all(
+      snapshot.docs.map(async (docSnap) => {
+        const sprintId = docSnap.id;
+        const sprintData = docSnap.data();
+
+        // Fetch 'items' subcollection
+        const itemsRef = collection(db, 'sprints', sprintId, 'items');
+        const itemsSnap = await getDocs(itemsRef);
+        const items = itemsSnap.docs.map((itemDoc) => ({
+          id: itemDoc.id,
+          ...itemDoc.data(),
+        }));
+
+        return {
+          id: sprintId,
+          ...sprintData,
+          items,
+        };
+      })
+    );
+
+    setSprints(sprintList);
+  };
 
   const fetchPassphrase = async () => {
     try {
@@ -73,13 +93,14 @@ const HomePage = () => {
       <h1>ProtoTigers Sprint Boards</h1>
       {renderCreateSprintButton()}
       {renderCreateSprintModal()}
-      <ul>
+      <div className={styles.boardContainer}>
         {sprints.map((sprint) => (
-          <li key={sprint.id}>
-            <Link to={`/sprint/${sprint.id}`}>{sprint.title}</Link>
-          </li>
+          <CardComponent
+            sprint={sprint}
+            key={sprint.id}
+          />
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
