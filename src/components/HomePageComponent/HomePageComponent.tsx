@@ -7,6 +7,7 @@ import { db } from '../../firebase';
 import CreateSprintModalComponent from '../CreateSprintModalComponent/CreateSprintModalComponent';
 import PassphraseModalComponent from '../PassphraseModalComponent/PassphraseModalComponent';
 import CardComponent from '../CardComponent/CardComponent';
+import EmptyCardComponent from '../CardComponent/EmptyCardComponent';
 import TabbedHeaderComponent from '../shared/TabbedHeaderComponent/TabbedHeaderComponent';
 
 import styles from './HomePageComponent.module.scss';
@@ -95,12 +96,10 @@ const HomePageComponent = () => {
 
   return (
     <div>
-      <TabbedHeaderComponent
-        onTabChange={handleTeamChange}
-        onButtonClick={() => setIsCreateSprintModalOpen(true)}
-      />
+      <TabbedHeaderComponent onTabChange={handleTeamChange} />
       {renderCreateSprintModal()}
       <div className={styles.boardContainer}>
+        <EmptyCardComponent onCardClick={() => setIsCreateSprintModalOpen(true)} />
         {filteredSprints.map((sprint) => (
           <CardComponent
             sprint={sprint}

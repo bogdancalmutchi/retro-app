@@ -11,13 +11,14 @@ import {
   getDoc
 } from 'firebase/firestore';
 
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import ThreeColumnsGridComponent from './ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import { useSprint } from '../contexts/SprintContext';
 import SprintHeaderComponent from './SprintHeaderComponent/SprintHeaderComponent';
 
 const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
+  const user = auth.currentUser;
   const { setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
@@ -64,6 +65,7 @@ const SprintBoardComponent = () => {
     await addDoc(itemsRef, {
       text: message,
       category,
+      createdBy: user.uid,
       createdAt: new Date(),
       likes: 0,
       dislikes: 0

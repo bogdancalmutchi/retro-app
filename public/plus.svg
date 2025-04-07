@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-dashed-plus">
+    <defs>
+        <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#15aabf; stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4c6ef5; stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="polygon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#4c6ef5; stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#15aabf; stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="circle-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#15aabf; stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4c6ef5; stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#4c6ef5;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#15aabf;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M8.56 3.69a9 9 0 0 0 -2.92 1.95" stroke="url(#circle-gradient)"/>
+    <path d="M3.69 8.56a9 9 0 0 0 -.69 3.44" stroke="url(#circle-gradient)"/>
+    <path d="M3.69 15.44a9 9 0 0 0 1.95 2.92" stroke="url(#circle-gradient)"/>
+    <path d="M8.56 20.31a9 9 0 0 0 3.44 .69" stroke="url(#circle-gradient)"/>
+    <path d="M15.44 20.31a9 9 0 0 0 2.92 -1.95" stroke="url(#circle-gradient)"/>
+    <path d="M20.31 15.44a9 9 0 0 0 .69 -3.44" stroke="url(#circle-gradient)"/>
+    <path d="M20.31 8.56a9 9 0 0 0 -1.95 -2.92" stroke="url(#circle-gradient)"/>
+    <path d="M15.44 3.69a9 9 0 0 0 -3.44 -.69" stroke="url(#circle-gradient)"/>
+    <!-- Plus sign (horizontal and vertical lines with gradient) -->
+    <path d="M9 12h6" stroke="#4c6ef5"/>
+    <path d="M12 9v6" stroke="#4c6ef5"/>
+</svg>

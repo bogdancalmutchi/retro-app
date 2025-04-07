@@ -1,8 +1,17 @@
 @use '../../scss/global/variables' as *;
 
+.emptyCardContainer,
 .cardContainer {
   min-width: 300px;
+  min-height: 257px;
   background-color: #f8f9fa;
+}
+
+.emptyCardContainer {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
 }
 
 .good {

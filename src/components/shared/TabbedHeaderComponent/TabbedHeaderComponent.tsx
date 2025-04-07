@@ -1,17 +1,15 @@
 import * as React from 'react';
-import { Avatar, Button, Container, Image, Tabs, Text } from '@mantine/core';
+import { Avatar, Container, Tabs, Text } from '@mantine/core';
 
 import styles from './TabbedHeaderComponent.module.scss';
 
 interface ITabbedHeaderComponentProps {
   onTabChange: (team: string) => void;
-  onButtonClick: () => void;
 }
 
 const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   const {
-    onTabChange,
-    onButtonClick
+    onTabChange
   } = props;
 
   const tabs = ['Protoss', 'Tigers'];
@@ -26,16 +24,9 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
               variant='gradient'
               gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
             >
-              <h1>ProtoTigers Retro App</h1>
+              ProtoTigers Retro App
             </Text>
           </div>
-          <Button
-            variant='gradient'
-            gradient={{ from: 'cyan', to: 'indigo', deg: 90 }}
-            onClick={onButtonClick}
-          >
-            Create Board
-          </Button>
         </div>
         <Tabs
           defaultValue='Protoss'

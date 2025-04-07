@@ -2,14 +2,16 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { Button, Modal, Textarea } from '@mantine/core';
+import { IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 
 import { INote, NoteCategory } from './ThreeColumnsGridComponent';
 import { useSprint } from '../../contexts/SprintContext';
-import styles from './ColumnComponent.module.scss';
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { IconCancel, IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
 import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
+import { useUser } from '../../contexts/UserProvider';
+
+import styles from './ColumnComponent.module.scss';
 
 interface IColumnComponentProps {
   header: string;
@@ -21,6 +23,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const { header, messages, onSubmit } = props;
 
   const { sprintId } = useSprint();
+  const { user } = useUser();
 
   const [note, setNote] = useState('');
   const [inEditMode, setInEditMode] = useState(false);
@@ -34,6 +37,10 @@ const ColumnComponent = (props: IColumnComponentProps) => {
       setNewNote(noteToBeEdited.text);
     }
   }, [inEditMode, noteToBeEdited]);
+
+  const isOwner = (note: INote) => {
+    return user && user.uid === note.createdBy;
+  };
 
   const handleSubmit = () => {
     if (note.trim()) {
@@ -160,7 +167,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                   <IconThumbUp
                     className={classNames(styles.icon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
                     size={18}
-                    onClick={() => handleThumbsUp(note)}
+                    onClick={() => !isOwner(note) && handleThumbsUp(note)}
                   />
                   <div>{note.likes}</div>
                 </div>
@@ -168,14 +175,14 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                   <IconThumbDown
                     className={classNames(styles.icon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
                     size={18}
-                    onClick={() => handleThumbsDown(note)}
+                    onClick={() => !isOwner(note) && handleThumbsDown(note)}
                   />
                   <div>{note.dislikes}</div>
                 </div>
               </div>
             )
           }
-          {!inEditMode && (
+          {(!inEditMode && isOwner(note)) && (
             <div className={styles.editDeleteContainer}>
               <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
               <IconTrash className={styles.icon} size={18} onClick={() => {

@@ -16,6 +16,7 @@ export interface INote {
   category: NoteCategory;
   likes: number;
   dislikes: number;
+  createdBy: string;
 }
 
 interface IThreeGridComponentProps {
