@@ -23,7 +23,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   } = props;
 
   const navigate = useNavigate();
-  const { setUserId, setDisplayName } = useUser();
+  const { setUserId, setDisplayName, setEmail } = useUser();
 
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
@@ -62,8 +62,11 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
 
       Cookies.set('userId', userId, { expires: 7, path: '' });
       Cookies.set('displayName', displayName, { expires: 7, path: '' });
+      Cookies.set('email', email, { expires: 7, path: '' });
       setUserId(userId);
       setDisplayName(displayName);
+      setEmail(email);
+
       navigate('/');
     } catch (error) {
       console.error('Error registering user:', error);
@@ -96,12 +99,15 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       if (isPasswordValid) {
         const userId = data?.id;
         const displayName = data?.displayName;
+        const email = data?.email;
 
         // Store the UUID in a cookie
         Cookies.set('userId', userId, { expires: 7, path: '' });
         Cookies.set('displayName', displayName, { expires: 7, path: '' });
+        Cookies.set('email', email, { expires: 7, path: '' });
         setUserId(userId);
         setDisplayName(displayName);
+        setEmail(email);
 
         navigate('/');
       } else {
