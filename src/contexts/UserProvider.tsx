@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, signInAnonymously, updateProfile, User } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { Center, Loader } from '@mantine/core';
 
 import { auth, db } from '../firebase';
@@ -9,13 +9,13 @@ import UserDetailsModalComponent from '../components/shared/UserDetailsModalComp
 type UserContextType = {
   user: User | null;
   displayName: string | null;
-  setUserName: (name: string) => Promise<void>;
+  setUserDetails: (email: string, displayName: string) => Promise<void>;
 };
 
 const UserContext = createContext<UserContextType>({
   user: null,
   displayName: null,
-  setUserName: async () => {}
+  setUserDetails: async () => {}
 });
 
 export const useUser = () => useContext(UserContext);
@@ -29,7 +29,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        setDisplayName(firebaseUser.displayName);
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setDisplayName(data.displayName);
+        }
       } else {
         await signInAnonymously(auth);
       }
@@ -39,21 +43,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const setUserName = async (name: string) => {
+  const setUserDetails = async (email?: string, displayName?: string) => {
     if (!auth.currentUser) return;
     const uid = auth.currentUser.uid;
 
-    // Update Firebase Auth profile
-    await updateProfile(auth.currentUser, { displayName: name });
+    if (email && !displayName) {
+      // Just looking up existing user by email
+      const usersCollection = collection(db, 'users');
+      const snapshot = await getDocs(usersCollection);
+      const match = snapshot.docs.find(doc => doc.data().email === email);
 
-    // Save to Firestore
-    await setDoc(doc(db, 'users', uid), {
-      displayName: name,
-      createdAt: new Date(),
-    });
-
-    // Update local state
-    setDisplayName(name);
+      if (match) {
+        const fetchedName = match.data().displayName;
+        setDisplayName(fetchedName);
+        await updateProfile(auth.currentUser, { displayName: fetchedName });
+      }
+    } else if (email && displayName) {
+      // Creating new user
+      await updateProfile(auth.currentUser, { displayName });
+      await setDoc(doc(db, 'users', uid), {
+        displayName,
+        email,
+        createdAt: new Date(),
+      });
+      setDisplayName(displayName);
+    } else if (displayName && !email) {
+      // Updating name only
+      await updateProfile(auth.currentUser, { displayName });
+      await updateDoc(doc(db, 'users', uid), { displayName });
+      setDisplayName(displayName);
+    }
   };
 
   if (loading || !user) {
@@ -65,13 +84,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   if (!displayName) {
-    return (
-      <UserDetailsModalComponent setUserName={setUserName} />
-    );
+    return <UserDetailsModalComponent onSetUserDetails={setUserDetails} />;
   }
 
   return (
-    <UserContext.Provider value={{ user, displayName, setUserName }}>
+    <UserContext.Provider value={{ user, displayName, setUserDetails }}>
       {children}
     </UserContext.Provider>
   );

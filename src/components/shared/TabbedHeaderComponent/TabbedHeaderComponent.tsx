@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Avatar, Container, Tabs, Text } from '@mantine/core';
 
+import { useUser } from '../../../contexts/UserProvider';
+
 import styles from './TabbedHeaderComponent.module.scss';
 
 interface ITabbedHeaderComponentProps {
@@ -13,6 +15,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   } = props;
 
   const tabs = ['Protoss', 'Tigers'];
+  const { displayName } = useUser();
 
   return (
     <div className={styles.header}>
@@ -27,6 +30,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
               ProtoTigers Retro App
             </Text>
           </div>
+          {displayName}
         </div>
         <Tabs
           defaultValue='Protoss'
