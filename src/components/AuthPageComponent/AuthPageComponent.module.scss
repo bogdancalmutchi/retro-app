@@ -1,0 +1,14 @@
+.authCard {
+  width: 450px;
+}
+
+.headerText {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  & > p {
+    font-size: 32px;
+    font-weight: bold;
+  }
+}

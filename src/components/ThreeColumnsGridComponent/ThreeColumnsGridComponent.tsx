@@ -17,6 +17,7 @@ export interface INote {
   likes: number;
   dislikes: number;
   createdBy: string;
+  reporter: string;
 }
 
 interface IThreeGridComponentProps {

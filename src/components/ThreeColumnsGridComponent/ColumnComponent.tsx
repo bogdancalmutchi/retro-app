@@ -9,7 +9,7 @@ import { INote, NoteCategory } from './ThreeColumnsGridComponent';
 import { useSprint } from '../../contexts/SprintContext';
 import { db } from '../../firebase';
 import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
-import { useUser } from '../../contexts/UserProvider';
+import { useUser } from '../../contexts/UserContext';
 
 import styles from './ColumnComponent.module.scss';
 
@@ -23,7 +23,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const { header, messages, onSubmit } = props;
 
   const { sprintId } = useSprint();
-  const { user } = useUser();
+  const { userId } = useUser();
 
   const [note, setNote] = useState('');
   const [inEditMode, setInEditMode] = useState(false);
@@ -39,7 +39,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   }, [inEditMode, noteToBeEdited]);
 
   const isOwner = (note: INote) => {
-    return user && user.uid === note.createdBy;
+    return userId && userId === note.createdBy;
   };
 
   const handleSubmit = () => {
@@ -121,6 +121,12 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     )
   };
 
+  const renderNoteReporter = (note: INote) => {
+    return (
+      <div className={styles.reporterContainer}>{note.reporter}</div>
+    );
+  };
+
   const renderNoteText = (note: INote) => {
     if (inEditMode && note.id === noteToBeEdited.id) {
       return (
@@ -158,6 +164,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const renderNoteCard = (note: INote) => {
     return (
       <div>
+        {renderNoteReporter(note)}
         {renderNoteText(note)}
         <div className={classNames(styles.cardFooter, {[styles.apCardFooter]: note.category === NoteCategory.ActionItem})}>
           {note.category !== NoteCategory.ActionItem &&

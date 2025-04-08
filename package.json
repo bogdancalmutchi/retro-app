@@ -15,12 +15,18 @@
     "@mantine/core": "^7.17.3",
     "@mantine/hooks": "^7.17.3",
     "@tabler/icons-react": "^3.31.0",
+    "@types/js-cookie": "^3.0.6",
+    "bcryptjs": "^3.0.2",
     "classnames": "^2.5.1",
     "firebase": "^11.5.0",
+    "i": "^0.3.7",
+    "js-cookie": "^3.0.5",
+    "npm": "^11.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.0",
-    "sass": "^1.86.0"
+    "sass": "^1.86.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

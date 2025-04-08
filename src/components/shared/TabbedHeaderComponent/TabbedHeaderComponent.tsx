@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Avatar, Container, Tabs, Text } from '@mantine/core';
 
-import { useUser } from '../../../contexts/UserProvider';
+import { useUser } from '../../../contexts/UserContext';
 
 import styles from './TabbedHeaderComponent.module.scss';
 
