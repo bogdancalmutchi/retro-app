@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Group, Menu, Text, UnstyledButton, Avatar } from '@mantine/core';
+import { Group, Menu, Text, UnstyledButton, Avatar, Modal, TextInput, Button, Flex } from '@mantine/core';
 import {
   IconChevronRight,
   IconUserEdit,
@@ -7,21 +7,28 @@ import {
 } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+
 import { useUser } from '../../../contexts/UserContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../../firebase';
 
 interface IUserMenuComponentProps {
   email: string;
   displayName: string;
+  userId: string;
 }
 
 const UserMenuComponent = (props: IUserMenuComponentProps) => {
   const {
     email,
-    displayName
+    displayName,
+    userId
   } = props;
 
   const navigate = useNavigate();
   const { setUserId, setDisplayName, setEmail } = useUser();
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
+  const [newDisplayName, setNewDisplayName] = React.useState('');
 
   const onLogout = () => {
     Cookies.remove('userId', { path: '/retro-app' });
@@ -33,6 +40,27 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     setEmail(null);
 
     navigate('/auth');
+  };
+
+  const onUpdateDisplayName = async () => {
+    try {
+      const userRef = doc(db, 'users', userId);
+
+      // Update Firestore
+      await updateDoc(userRef, {
+        displayName: newDisplayName,
+      });
+
+      // Update cookie
+      Cookies.set('displayName', newDisplayName, { expires: 7, path: '/retro-app' });
+
+      setDisplayName(newDisplayName);
+
+      console.log('Display name updated!');
+      setIsEditUserModalOpen(false);
+    } catch (error) {
+      console.error('Failed to update display name:', error);
+    }
   };
 
   const userButton = () => {
@@ -54,22 +82,55 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     );
   }
 
+  const renderEditUserModal = () => {
+    return (
+      <Modal
+        centered
+        title='Edit User'
+        opened={isEditUserModalOpen}
+        onClose={() => {
+          setIsEditUserModalOpen(false);
+        }}
+      >
+        <Flex direction='column' gap='md'>
+          <TextInput
+            label='Name'
+            placeholder='Name'
+            value={newDisplayName}
+            onChange={(event) => setNewDisplayName(event.currentTarget.value)}
+          />
+          <Flex justify='flex-end'>
+            <Button
+              onClick={() => onUpdateDisplayName()}
+              disabled={!newDisplayName.trim().length}
+            >
+              Update
+            </Button>
+          </Flex>
+        </Flex>
+      </Modal>
+    );
+  };
+
   return (
-    <div>
-      <Menu shadow='md' width={200}>
-        <Menu.Target>
-          {userButton()}
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item onClick={() => console.log('>>> WWWW')} leftSection={<IconUserEdit size={14} />}>
-            Change Name
-          </Menu.Item>
-          <Menu.Item onClick={onLogout} leftSection={<IconLogout size={14} />}>
-            Sign Out
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </div>
+    <>
+      {isEditUserModalOpen && renderEditUserModal()}
+      <div>
+        <Menu shadow='md' width={200}>
+          <Menu.Target>
+            {userButton()}
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item onClick={() => setIsEditUserModalOpen(true)} leftSection={<IconUserEdit size={14} />}>
+              Change Name
+            </Menu.Item>
+            <Menu.Item onClick={onLogout} leftSection={<IconLogout size={14} />}>
+              Sign Out
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+    </>
   );
 };
 

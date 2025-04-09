@@ -66,7 +66,6 @@ const SprintBoardComponent = () => {
     await addDoc(itemsRef, {
       text: message,
       category,
-      reporter: displayName,
       createdBy: userId,
       createdAt: new Date(),
       likes: 0,

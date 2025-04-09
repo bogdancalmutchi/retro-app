@@ -10,6 +10,7 @@ import { useSprint } from '../../contexts/SprintContext';
 import { db } from '../../firebase';
 import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
 import { useUser } from '../../contexts/UserContext';
+import NoteReporterComponent from '../shared/NoteReporterComponent/NoteReporterComponent';
 
 import styles from './ColumnComponent.module.scss';
 
@@ -121,12 +122,6 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     )
   };
 
-  const renderNoteReporter = (note: INote) => {
-    return (
-      <div className={styles.reporterContainer}>{note.reporter}</div>
-    );
-  };
-
   const renderNoteText = (note: INote) => {
     if (inEditMode && note.id === noteToBeEdited.id) {
       return (
@@ -164,7 +159,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const renderNoteCard = (note: INote) => {
     return (
       <div>
-        {renderNoteReporter(note)}
+        <NoteReporterComponent userId={note.createdBy} />
         {renderNoteText(note)}
         <div className={classNames(styles.cardFooter, {[styles.apCardFooter]: note.category === NoteCategory.ActionItem})}>
           {note.category !== NoteCategory.ActionItem &&

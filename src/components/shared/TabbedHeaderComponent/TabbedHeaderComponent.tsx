@@ -16,7 +16,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   } = props;
 
   const tabs = ['Protoss', 'Tigers'];
-  const { displayName, email } = useUser();
+  const { displayName, email, userId } = useUser();
 
   return (
     <div className={styles.header}>
@@ -31,7 +31,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
               ProtoTigers Retro App
             </Text>
           </div>
-          <UserMenuComponent email={email} displayName={displayName} />
+          <UserMenuComponent email={email} displayName={displayName} userId={userId} />
         </div>
         <Tabs
           defaultValue='Protoss'

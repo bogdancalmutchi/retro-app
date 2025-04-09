@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { Avatar, Button, Center, Flex, Group, Modal, Paper, Text, TextInput } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,7 +11,6 @@ import { useUser } from '../../contexts/UserContext';
 import { db } from '../../firebase';
 
 import styles from './AuthPageComponent.module.scss';
-
 
 interface ILoginPageComponentProps {
   // Define props here
@@ -38,21 +37,23 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
 
   const registerUser = async (displayName: string, email: string, password: string) => {
     try {
-      // Step 1: Check if user already exists
-      const userRef = doc(db, 'users', email);
-      const existingUser = await getDoc(userRef);
-      const userId = uuidv4();
+    const userId = uuidv4();
 
-      if (existingUser.exists()) {
+    // Check if email already exists
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    const existing = snapshot.docs.find(doc => doc.data().email === email);
+
+    if (existing) {
         console.error('User with this email already exists.');
         setUserExistsError('User with this email already exists.');
         return;
       }
 
-      // Step 2: Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Step 3: Create user
+    // Store user using UUID as doc ID
+    const userRef = doc(db, 'users', userId);
       await setDoc(userRef, {
         email,
         displayName,
@@ -75,44 +76,40 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
 
   const loginUser = async (email: string, password: string) => {
     try {
-      // Get the user document from Firestore
-      const userDocRef = doc(db, 'users', email);
-      const userDoc = await getDoc(userDocRef);
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const userDoc = snapshot.docs.find(doc => doc.data().email === email);
 
-      if (!userDoc.exists()) {
+      if (!userDoc) {
         setIncorrectEmailError('User not found');
         return;
       }
 
-      // Get the stored hashed password
       const data = userDoc.data();
-      const storedPasswordHash = data?.passwordHash;
+      const isPasswordValid = await bcrypt.compare(password, data.passwordHash);
 
-      if (!storedPasswordHash) {
-        console.error('Password not set for user');
+      if (!isPasswordValid) {
+        console.log('Incorrect password');
+        setIncorrectPasswordError('Incorrect password');
         return;
       }
 
-      // Compare the entered password with the hashed password
-      const isPasswordValid = await bcrypt.compare(password, storedPasswordHash);
+      const userId = userDoc.id;
+      const displayName = data.displayName;
 
-      if (isPasswordValid) {
-        const userId = data?.id;
-        const displayName = data?.displayName;
-        const email = data?.email;
+      // Store the UUID in a cookie
+      Cookies.set('userId', userId, { expires: 7, path: '' });
+      Cookies.set('displayName', displayName, { expires: 7, path: '' });
+      Cookies.set('email', email, { expires: 7, path: '' });
 
-        // Store the UUID in a cookie
-        Cookies.set('userId', userId, { expires: 7, path: '' });
-        Cookies.set('displayName', displayName, { expires: 7, path: '' });
-        Cookies.set('email', email, { expires: 7, path: '' });
-        setUserId(userId);
-        setDisplayName(displayName);
-        setEmail(email);
+      setUserId(userId);
+      setDisplayName(displayName);
+      setEmail(email);
 
-        navigate('/');
-      } else {
-        setIncorrectPasswordError('Incorrect password');
-      }
+      setIncorrectEmailError(null);
+      setIncorrectPasswordError(null);
+
+      navigate('/');
     } catch (error) {
       console.error('Error logging in user:', error);
     }
@@ -169,6 +166,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   };
 
   const renderLoginModal = () => {
+    const isInputEmpty = !loginEmailInput.trim().length || !loginPasswordInput.trim().length;
     return (
       <Modal
         centered
@@ -195,15 +193,16 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             error={incorrectPasswordError}
             type='password'
             onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
+            onKeyDown={async (event) => {
+              if (event.key === 'Enter' && !isInputEmpty) {
+                await loginUser(loginEmailInput, loginPasswordInput)
+              }
+            }}
           />
           <Flex justify='flex-end'>
             <Button
-              onClick={async () => {
-                setIncorrectEmailError(null);
-                setIncorrectPasswordError(null);
-                await loginUser(loginEmailInput, loginPasswordInput);
-              }}
-              disabled={!loginEmailInput.trim().length || !loginPasswordInput.trim().length}
+              onClick={() => loginUser(loginEmailInput, loginPasswordInput)}
+              disabled={isInputEmpty}
             >
               Login
             </Button>
