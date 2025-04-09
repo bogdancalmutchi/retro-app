@@ -1,0 +1,47 @@
+/* Gradient Border Wrapper Styles */
+.gradientBorderWrapper {
+  position: fixed; /* Fixed position relative to the viewport */
+  bottom: 60px;    /* 60px from the bottom */
+  right: 100px;    /* 100px from the right */
+  transform: translateX(-50%); /* Center horizontally */
+  z-index: 1;     /* Ensure it appears on top */
+  display: inline-block;
+  padding: 2px;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #15aabf, #4c6ef5, #15aabf);
+  background-size: 200% 200%;
+  animation: gradientShift 1s ease infinite;
+  transition: background 0.3s ease;
+}
+
+.gradientBorderWrapper:hover {
+  background: linear-gradient(45deg, #4c6ef5, #15aabf, #4c6ef5);
+}
+
+/* Button Styles */
+.gradientButton {
+  background-color: #fff !important;
+  border: none;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Drop shadow effect */
+  transition: box-shadow 0.3s ease; /* Smooth transition for shadow */
+}
+
+/* Keyframes for Gradient Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Optional: Apply transition styles from the Transition component */
+.transitionBox {
+  /* The transition styles passed from Mantine's Transition component will be injected here */
+}

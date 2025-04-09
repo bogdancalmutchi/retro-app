@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { Button, Modal, Textarea } from '@mantine/core';
-import { IconCheck, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
+import { Button, Modal, Textarea, Tooltip } from '@mantine/core';
+import { IconCheck, IconLock, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 
 import { INote, NoteCategory } from './ThreeColumnsGridComponent';
@@ -159,7 +159,14 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const renderNoteCard = (note: INote) => {
     return (
       <div>
-        <NoteReporterComponent userId={note.createdBy} />
+        <div className={styles.noteHeader}>
+          <NoteReporterComponent userId={note.createdBy} />
+          {!note.published && (
+            <Tooltip label='Only visible to you'>
+              <IconLock size={18}/>
+            </Tooltip>
+          )}
+        </div>
         {renderNoteText(note)}
         <div className={classNames(styles.cardFooter, {[styles.apCardFooter]: note.category === NoteCategory.ActionItem})}>
           {note.category !== NoteCategory.ActionItem &&

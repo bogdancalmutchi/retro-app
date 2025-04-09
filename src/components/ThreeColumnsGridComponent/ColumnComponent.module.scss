@@ -112,3 +112,8 @@
 .activeDislikeIcon {
   stroke: red;
 }
+
+.noteHeader {
+  display: flex;
+  justify-content: space-between;
+}

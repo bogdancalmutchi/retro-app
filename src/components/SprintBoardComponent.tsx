@@ -8,21 +8,24 @@ import {
   onSnapshot,
   addDoc,
   doc,
-  getDoc
+  getDoc,
+  writeBatch
 } from 'firebase/firestore';
 
 import { db } from '../firebase';
-import ThreeColumnsGridComponent from './ThreeColumnsGridComponent/ThreeColumnsGridComponent';
+import ThreeColumnsGridComponent, { INote, NoteCategory } from './ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import { useSprint } from '../contexts/SprintContext';
 import SprintHeaderComponent from './SprintHeaderComponent/SprintHeaderComponent';
 import { useUser } from '../contexts/UserContext';
+import GradientBorderButtonComponent from './shared/GradientBorderButtonComponent/GradientBorderButtonComponent';
 
 const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
-  const { userId, displayName } = useUser();
+  const { userId } = useUser();
   const { setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
+  const [ownPrivateNotes, setOwnPrivateNotes] = useState<any[]>([]);
 
   useEffect(() => {
     if (!sprintId) return;
@@ -49,11 +52,18 @@ const SprintBoardComponent = () => {
     };
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map((doc) => ({
+      const allItems = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
       }));
-      setMessages(items);
+      const visibleItems = allItems.filter((note: INote) =>
+        note.published || note.createdBy === userId
+      );
+      const ownPrivateNotes = allItems.filter((note: INote) =>
+        note.published === false && note.createdBy === userId
+      );
+      setOwnPrivateNotes(ownPrivateNotes);
+      setMessages(visibleItems);
     });
 
     fetchSprint();
@@ -64,17 +74,40 @@ const SprintBoardComponent = () => {
     if (!contextSprintId) return;
     const itemsRef = collection(db, 'sprints', contextSprintId, 'items');
     await addDoc(itemsRef, {
-      text: message,
+      text: message.trim(),
       category,
       createdBy: userId,
       createdAt: new Date(),
+      published: category === NoteCategory.ActionItem,
       likes: 0,
       dislikes: 0
     });
   };
 
+  const onPublishNotes = async () => {
+    if (!contextSprintId) return; // Ensure we have a valid sprint ID
+
+    const batch = writeBatch(db);
+
+    // Loop through all unpublished personal notes and update them to published: true
+    ownPrivateNotes.forEach((note) => {
+      if (note.published === false) {
+        const noteRef = doc(db, 'sprints', contextSprintId, 'items', note.id); // Reference to the note in the 'items' subcollection
+        batch.update(noteRef, { published: true });
+      }
+    });
+
+    try {
+      await batch.commit(); // Commit the batch of updates
+      console.log('All notes published!');
+    } catch (error) {
+      console.error('Error publishing notes:', error);
+    }
+  };
+
   return (
     <div>
+      <GradientBorderButtonComponent onPublishNotes={onPublishNotes} unpublishedNotes={ownPrivateNotes}/>
       <SprintHeaderComponent sprintTitle={sprintTitle} />
       <ThreeColumnsGridComponent
         messages={messages}
