@@ -7,12 +7,11 @@ import { db } from '../../firebase';
 import CreateSprintModalComponent from '../CreateSprintModalComponent/CreateSprintModalComponent';
 import CardComponent from '../CardComponent/CardComponent';
 import EmptyCardComponent from '../CardComponent/EmptyCardComponent';
-import TabbedHeaderComponent from '../shared/TabbedHeaderComponent/TabbedHeaderComponent';
 
 import styles from './HomePageComponent.module.scss';
 
 const HomePageComponent = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const selectedTeam = searchParams.get('team') || 'Protoss';
   const [sprints, setSprints] = useState<any[]>([]);
   const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
@@ -53,13 +52,8 @@ const HomePageComponent = () => {
     (sprint) => sprint.team === selectedTeam
   );
 
-  const handleTeamChange = (team: string) => {
-    setSearchParams({ team });
-  };
-
   return (
     <div>
-      <TabbedHeaderComponent onTabChange={handleTeamChange} />
       <CreateSprintModalComponent
         isModalOpen={isCreateSprintModalOpen}
         onClose={() => setIsCreateSprintModalOpen(false)}

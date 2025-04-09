@@ -10,6 +10,7 @@ import HomePageComponent from './components/HomePageComponent/HomePageComponent'
 import AuthPageComponent from './components/AuthPageComponent/AuthPageComponent';
 import ProtectedRoute from './contexts/ProtectedRoute';
 import { UserProvider } from './contexts/UserContext';
+import GlobalHeaderWrapper from './components/wrappers/GlobalHeaderWrapper/GlobalHeaderWrapper';
 
 const App = () => {
   return (
@@ -26,7 +27,9 @@ const App = () => {
                 path='/'
                 element={
                   <ProtectedRoute>
-                    <HomePageComponent />
+                    <GlobalHeaderWrapper>
+                      <HomePageComponent />
+                    </GlobalHeaderWrapper>
                   </ProtectedRoute>
                 }
               />
@@ -34,7 +37,9 @@ const App = () => {
                 path='/sprint/:sprintId'
                 element={
                   <ProtectedRoute>
-                    <SprintBoardComponent />
+                    <GlobalHeaderWrapper>
+                      <SprintBoardComponent />
+                    </GlobalHeaderWrapper>
                   </ProtectedRoute>
                 }
               />

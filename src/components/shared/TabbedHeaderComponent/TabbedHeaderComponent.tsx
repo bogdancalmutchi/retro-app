@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Avatar, Container, Tabs, Text } from '@mantine/core';
+import { useLocation } from 'react-router-dom';
 
 import { useUser } from '../../../contexts/UserContext';
 import UserMenuComponent from '../UserMenuComponent/UserMenuComponent';
@@ -8,13 +9,17 @@ import styles from './TabbedHeaderComponent.module.scss';
 
 interface ITabbedHeaderComponentProps {
   onTabChange: (team: string) => void;
+  selectedTeam: string;
 }
 
 const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   const {
-    onTabChange
+    onTabChange,
+    selectedTeam
   } = props;
 
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const tabs = ['Protoss', 'Tigers'];
   const { displayName, email, userId } = useUser();
 
@@ -33,24 +38,26 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
           </div>
           <UserMenuComponent email={email} displayName={displayName} userId={userId} />
         </div>
-        <Tabs
-          defaultValue='Protoss'
-          variant='outline'
-          classNames={{
-            root: styles.tabs,
-            list: styles.tabsList,
-            tab: styles.tab,
-          }}
-          onChange={(value) => onTabChange(value)}
-        >
-          <Tabs.List>
-            {tabs.map((tab) => (
-              <Tabs.Tab value={tab} key={tab}>
-                {tab}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs>
+        {isHomePage && (
+          <Tabs
+            value={selectedTeam}
+            onChange={onTabChange}
+            variant='outline'
+            classNames={{
+              root: styles.tabs,
+              list: styles.tabsList,
+              tab: styles.tab,
+            }}
+          >
+            <Tabs.List>
+              {tabs.map((tab) => (
+                <Tabs.Tab value={tab} key={tab}>
+                  {tab}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs>
+        )}
       </Container>
     </div>
   );

@@ -56,10 +56,10 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     if (inEditMode) {
       return (
         <TextInput
-          label="Sprint Name"
+          label='Sprint Name'
           defaultValue={newSprintTitle || sprintTitle}
           onChange={(event) => setNewSprintTitle(event.target.value)}
-          type="text"
+          type='text'
           maxLength={128}
           rightSectionWidth='50'
           rightSection={

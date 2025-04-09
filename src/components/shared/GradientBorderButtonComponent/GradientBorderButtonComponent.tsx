@@ -17,9 +17,9 @@ const GradientBorderButtonComponent = (props: IGradientBorderButtonComponentProp
   return (
     <Transition
       mounted={!!unpublishedNotes.length}
-      transition="slide-left"
+      transition='slide-left'
       duration={400}
-      timingFunction="ease"
+      timingFunction='ease'
     >
       {(styles) => (
         <Box className={`${customStyles.gradientBorderWrapper} ${customStyles.transitionBox}`} style={styles}>

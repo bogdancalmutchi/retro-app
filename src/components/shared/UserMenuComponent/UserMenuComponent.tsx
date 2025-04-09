@@ -52,12 +52,14 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
       });
 
       // Update cookie
+      Cookies.remove('displayName', { path: '/retro-app' });
       Cookies.set('displayName', newDisplayName, { expires: 7, path: '/retro-app' });
 
       setDisplayName(newDisplayName);
 
       console.log('Display name updated!');
       setIsEditUserModalOpen(false);
+      window.location.reload();
     } catch (error) {
       console.error('Failed to update display name:', error);
     }
@@ -67,12 +69,12 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     return (
       <UnstyledButton>
         <Group>
-          <Avatar key={displayName} name={displayName} color="initials" />
+          <Avatar key={displayName} name={displayName} color='initials' />
           <div style={{ flex: 1 }}>
-            <Text size="sm" fw={500}>
+            <Text size='sm' fw={500}>
               {displayName}
             </Text>
-            <Text c="dimmed" size="xs">
+            <Text c='dimmed' size='xs'>
               {email}
             </Text>
           </div>
