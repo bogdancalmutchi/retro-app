@@ -27,7 +27,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
       const docRef = await addDoc(collection(db, 'sprints'), {
         title: sprintName,
         team: sprintTeam,
-        state: 'open',
+        isOpen: true,
         createdAt: new Date(),
       });
 

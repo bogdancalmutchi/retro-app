@@ -5,14 +5,16 @@ import {
   IconCheck,
   IconX
 } from '@tabler/icons-react';
-
-import styles from './SprintHeaderComponent.module.scss';
+import classNames from 'classnames';
 import { TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
+
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
-import classNames from 'classnames';
+import DisabledTooltipWrapper from '../shared/DisabledTooltipWrapper/DisabledTooltipWrapper';
+
+import styles from './SprintHeaderComponent.module.scss';
 
 interface ISprintNameComponentProps {
   sprintTitle: string;
@@ -23,7 +25,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     sprintTitle
   } = props;
 
-  const { sprintId } = useSprint();
+  const { sprintId, isOpen: isSprintOpen } = useSprint();
   const navigate = useNavigate();
   const [inEditMode, setInEditMode] = useState(false);
   const [newSprintTitle, setNewSprintTitle] = useState('');
@@ -86,18 +88,23 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
       )
     }
     return (
-      <Tooltip
-        className={styles.icon}
-        disabled={inEditMode}
-        label='Click to edit Sprint Title'
-      >
-        <div
-          className={styles.header}
-          onClick={() => setInEditMode(true)}
-        >
-          {newSprintTitle || sprintTitle}
+      <DisabledTooltipWrapper disabled={isSprintOpen}>
+        <div>
+          <Tooltip.Floating
+            color='blue'
+            className={styles.icon}
+            disabled={inEditMode || !isSprintOpen}
+            label='Click to edit Sprint Title'
+          >
+            <div
+              className={styles.header}
+              onClick={() => isSprintOpen && setInEditMode(true)}
+            >
+              {newSprintTitle || sprintTitle}
+            </div>
+          </Tooltip.Floating>
         </div>
-      </Tooltip>
+      </DisabledTooltipWrapper>
     );
   };
 

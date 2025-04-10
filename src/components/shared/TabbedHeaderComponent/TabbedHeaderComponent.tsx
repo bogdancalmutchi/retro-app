@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Avatar, Container, Tabs, Text } from '@mantine/core';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useUser } from '../../../contexts/UserContext';
 import UserMenuComponent from '../UserMenuComponent/UserMenuComponent';
@@ -19,6 +19,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   } = props;
 
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
   const tabs = ['Protoss', 'Tigers'];
   const { displayName, email, userId } = useUser();
@@ -28,7 +29,12 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
       <Container size='100%'>
         <div className={styles.headerContainer}>
           <div className={styles.headerText}>
-            <Avatar radius='md' src='/retro-app/favicon.svg'/>
+            <Avatar
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+              radius='md'
+              src='/retro-app/favicon.svg'
+            />
             <Text
               variant='gradient'
               gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}

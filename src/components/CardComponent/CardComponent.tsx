@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Button, Group, Paper, Text } from '@mantine/core';
+import { Badge, Button, Flex, Group, Paper, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 
 import { INote, NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
+import { useSprint } from '../../contexts/SprintContext';
 
 import styles from './CardComponent.module.scss';
 
@@ -11,6 +12,7 @@ export interface ISprint {
   id: string;
   title: string;
   team: string;
+  isOpen: boolean;
   items: INote[];
 }
 
@@ -35,6 +37,7 @@ const getCategoryCounts = (items: INote[]): Record<string, number> => {
 
 const CardComponent = ({ sprint }: ICardComponentProps) => {
   const navigate = useNavigate();
+  const { setSprintId } = useSprint();
   const categoryCounts = getCategoryCounts(sprint.items);
 
   const renderedItems = CATEGORY_ORDER.map((category) => {
@@ -63,9 +66,9 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
       <Text ta='center' fz='lg' fw={500} mt='sm'>
         {sprint.title}
       </Text>
-      <Text ta='center' fz='sm' c='dimmed'>
-        {sprint.team}
-      </Text>
+      <Flex justify='center' direction='row'  gap='xs'>
+        <Badge size='xs' variant='light' color={sprint.isOpen ? 'blue' : 'red'}>{sprint.isOpen ? 'Open' : 'Closed'}</Badge>
+      </Flex>
 
       <Group mt='md' justify='center' gap={30}>
         {renderedItems}
@@ -78,7 +81,10 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
         mt='xl'
         size='md'
         variant='default'
-        onClick={() => navigate(`/sprint/${sprint.id}`)}
+        onClick={() => {
+          navigate(`/sprint/${sprint.id}`);
+          setSprintId(sprint.id);
+        }}
       >
         Open Sprint Board
       </Button>

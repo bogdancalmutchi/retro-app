@@ -11,6 +11,7 @@ import { db } from '../../firebase';
 import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
 import { useUser } from '../../contexts/UserContext';
 import NoteReporterComponent from '../shared/NoteReporterComponent/NoteReporterComponent';
+import DisabledTooltipWrapper from '../shared/DisabledTooltipWrapper/DisabledTooltipWrapper';
 
 import styles from './ColumnComponent.module.scss';
 
@@ -23,7 +24,7 @@ interface IColumnComponentProps {
 const ColumnComponent = (props: IColumnComponentProps) => {
   const { header, messages, onSubmit } = props;
 
-  const { sprintId } = useSprint();
+  const { sprintId, isOpen: isSprintOpen } = useSprint();
   const { userId } = useUser();
 
   const [note, setNote] = useState('');
@@ -162,36 +163,43 @@ const ColumnComponent = (props: IColumnComponentProps) => {
         <div className={styles.noteHeader}>
           <NoteReporterComponent userId={note.createdBy} />
           {!note.published && (
-            <Tooltip label='Only visible to you'>
+            <Tooltip color='blue' label='Only visible to you'>
               <IconLock size={18}/>
             </Tooltip>
           )}
         </div>
         {renderNoteText(note)}
-        <div className={classNames(styles.cardFooter, {[styles.apCardFooter]: note.category === NoteCategory.ActionItem})}>
-          {note.category !== NoteCategory.ActionItem &&
+        <div
+          className={classNames(
+            styles.cardFooter,
+            {[styles.apCardFooter]: note.category === NoteCategory.ActionItem || !note.published}
+          )}
+        >
+          {(note.category !== NoteCategory.ActionItem && note.published) &&
             (
-              <div className={styles.likesContainer}>
-                <div>
-                  <IconThumbUp
-                    className={classNames(styles.icon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
-                    size={18}
-                    onClick={() => !isOwner(note) && handleThumbsUp(note)}
-                  />
-                  <div>{note.likes}</div>
+              <DisabledTooltipWrapper disabled={isSprintOpen}>
+                <div className={styles.likesContainer}>
+                  <div>
+                    <IconThumbUp
+                      className={classNames(styles.icon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
+                      size={18}
+                      onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsUp(note)}
+                    />
+                    <div>{note.likes}</div>
+                  </div>
+                  <div>
+                    <IconThumbDown
+                      className={classNames(styles.icon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
+                      size={18}
+                      onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsDown(note)}
+                    />
+                    <div>{note.dislikes}</div>
+                  </div>
                 </div>
-                <div>
-                  <IconThumbDown
-                    className={classNames(styles.icon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
-                    size={18}
-                    onClick={() => !isOwner(note) && handleThumbsDown(note)}
-                  />
-                  <div>{note.dislikes}</div>
-                </div>
-              </div>
+              </DisabledTooltipWrapper>
             )
           }
-          {(!inEditMode && isOwner(note)) && (
+          {(!inEditMode && isSprintOpen && isOwner(note)) && (
             <div className={styles.editDeleteContainer}>
               <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
               <IconTrash className={styles.icon} size={18} onClick={() => {
@@ -219,18 +227,21 @@ const ColumnComponent = (props: IColumnComponentProps) => {
 
   const renderInputContainer = () => {
     return (
-      <div className={styles.inputContainer}>
-        <Textarea
-          autosize
-          placeholder='Write a note...'
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          maxLength={512}
-        />
-        <Button className={styles.addNoteButton} onClick={handleSubmit} disabled={!note.trim()}>
-          Add
-        </Button>
-      </div>
+      <DisabledTooltipWrapper disabled={isSprintOpen}>
+        <div className={styles.inputContainer}>
+          <Textarea
+            autosize
+            placeholder='Write a note...'
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            maxLength={512}
+            disabled={!isSprintOpen}
+          />
+          <Button className={styles.addNoteButton} onClick={handleSubmit} disabled={!note.trim()}>
+            Add
+          </Button>
+        </div>
+      </DisabledTooltipWrapper>
     )
   };
 

@@ -22,7 +22,7 @@ import GradientBorderButtonComponent from './shared/GradientBorderButtonComponen
 const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
   const { userId } = useUser();
-  const { setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
+  const { setIsOpen, setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [ownPrivateNotes, setOwnPrivateNotes] = useState<any[]>([]);
@@ -41,7 +41,9 @@ const SprintBoardComponent = () => {
       try {
         const sprintDoc = await getDoc(sprintDocRef);
         if (sprintDoc.exists()) {
-          setSprintTitle(sprintDoc.data().title || sprintId);
+          const data = sprintDoc.data();
+          setSprintTitle(data.title || sprintId);
+          setIsOpen(data.isOpen);
         } else {
           setSprintTitle(`Sprint ${sprintId} (not found)`);
         }
@@ -99,7 +101,6 @@ const SprintBoardComponent = () => {
 
     try {
       await batch.commit(); // Commit the batch of updates
-      console.log('All notes published!');
     } catch (error) {
       console.error('Error publishing notes:', error);
     }

@@ -89,7 +89,6 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       const isPasswordValid = await bcrypt.compare(password, data.passwordHash);
 
       if (!isPasswordValid) {
-        console.log('Incorrect password');
         setIncorrectPasswordError('Incorrect password');
         return;
       }
