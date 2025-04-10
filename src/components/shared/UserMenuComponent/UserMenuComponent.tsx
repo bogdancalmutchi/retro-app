@@ -68,7 +68,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     return (
       <UnstyledButton>
         <Group>
-          <Avatar key={displayName} name={displayName} color='initials' />
+          <Avatar src={`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${encodeURIComponent(userId)}&backgroundColor=F2D3B1`}/>
           <div style={{ flex: 1 }}>
             <Text size='sm' fw={500}>
               {displayName}

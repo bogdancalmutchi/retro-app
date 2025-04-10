@@ -88,23 +88,20 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
       )
     }
     return (
-      <DisabledTooltipWrapper disabled={isSprintOpen}>
-        <div>
-          <Tooltip.Floating
-            color='blue'
-            className={styles.icon}
-            disabled={inEditMode || !isSprintOpen}
-            label='Click to edit Sprint Title'
-          >
-            <div
-              className={styles.header}
-              onClick={() => isSprintOpen && setInEditMode(true)}
-            >
-              {newSprintTitle || sprintTitle}
-            </div>
-          </Tooltip.Floating>
+      <Tooltip.Floating
+        color='blue'
+        className={styles.icon}
+        disabled={inEditMode || !isSprintOpen}
+        label='Click to edit Sprint Title'
+      >
+        <div
+          className={styles.header}
+          style={{ cursor: isSprintOpen ? 'pointer' : 'default' }}
+          onClick={() => isSprintOpen && setInEditMode(true)}
+        >
+          {newSprintTitle || sprintTitle}
         </div>
-      </DisabledTooltipWrapper>
+      </Tooltip.Floating>
     );
   };
 

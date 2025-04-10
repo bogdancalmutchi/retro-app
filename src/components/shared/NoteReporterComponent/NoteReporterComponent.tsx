@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
+import { Avatar, Flex } from '@mantine/core';
 
 import { db } from '../../../firebase';
 
@@ -28,7 +29,12 @@ const NoteReporterComponent = ({ userId }: { userId: string }) => {
     fetchUser();
   }, [userId]);
 
-  return <div className={styles.reporterContainer}>{displayName}</div>;
+  return <div className={styles.reporterContainer}>
+    <Flex justify='center' direction='row' gap='xs' align='center'>
+      <Avatar size='xs' src={`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${encodeURIComponent(userId)}&backgroundColor=ffdfbf`}/>
+      {displayName}
+    </Flex>
+  </div>;
 };
 
 export default NoteReporterComponent;
