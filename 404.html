@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta http-equiv="refresh" content="0; url=./index.html" />
-    </head>
-    <body>
-    <p>Redirecting...</p>
-    </body>
+<head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      const redirectTo = '/retro-app/index.html' + location.search + location.hash;
+      window.location.replace(redirectTo);
+    </script>
+</head>
+<body>
+<p>Redirecting...</p>
+</body>
 </html>
