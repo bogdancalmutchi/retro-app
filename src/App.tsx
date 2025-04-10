@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import Cookies from 'js-cookie';
@@ -17,7 +17,7 @@ const App = () => {
     <MantineProvider defaultColorScheme='light'>
       <UserProvider>
         <SprintProvider>
-          <BrowserRouter basename='/retro-app/'>
+          <HashRouter>
             <Routes>
               {/* No protection needed for the login page */}
               <Route path='/auth' element={<AuthPageComponent />} />
@@ -46,7 +46,7 @@ const App = () => {
               {/* Catch-all route for unknown paths */}
               <Route path="*" element={<NotFoundRedirect />} />
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </SprintProvider>
       </UserProvider>
     </MantineProvider>
