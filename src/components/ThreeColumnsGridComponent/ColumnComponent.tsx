@@ -168,7 +168,9 @@ const ColumnComponent = (props: IColumnComponentProps) => {
             </Tooltip>
           )}
         </div>
-        {renderNoteText(note)}
+        <div className={styles.noteContent}>
+          {renderNoteText(note)}
+        </div>
         <div
           className={classNames(
             styles.cardFooter,
