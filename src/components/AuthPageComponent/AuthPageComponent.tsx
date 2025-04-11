@@ -24,6 +24,8 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   const navigate = useNavigate();
   const { setUserId, setDisplayName, setEmail } = useUser();
 
+  const allowedDomain = '@intralinks.com';
+  const [emailDomainError, setEmailDomainError] = useState(false);
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
   const [signupDisplayName, setSignupDisplayName] = useState('');
@@ -125,6 +127,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
           setSignupDisplayName('');
           setSignupEmailInput('');
           setSignupPasswordInput('');
+          setEmailDomainError(false);
         }}
       >
         <Flex direction='column' gap='md'>
@@ -140,9 +143,10 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             label='Email'
             placeholder='e-mail'
             value={signupEmailInput}
-            error={userExistsError}
+            error={emailDomainError ? 'Email domain not allowed.' : userExistsError}
             withAsterisk
-            onChange={(event) => setSignupEmailInput(event.currentTarget.value)}
+            onFocus={() => setEmailDomainError(false)}
+            onChange={(event) => setSignupEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
             label='Password'
@@ -154,7 +158,14 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
           />
           <Flex justify='flex-end'>
             <Button
-              onClick={() => registerUser(signupDisplayName, signupEmailInput, signupPasswordInput)}
+              onClick={async () => {
+                if (!signupEmailInput.endsWith(allowedDomain)) {
+                  setEmailDomainError(true);
+                  return;
+                }
+                setEmailDomainError(false);
+                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput)
+              }}
               disabled={!signupDisplayName.trim().length || !signupEmailInput.trim().length || !signupPasswordInput.trim().length}
             >
               Create
@@ -185,7 +196,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             placeholder='e-mail'
             value={loginEmailInput}
             error={incorrectEmailError}
-            onChange={(event) => setLoginEmailInput(event.currentTarget.value)}
+            onChange={(event) => setLoginEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
             label='Password'
