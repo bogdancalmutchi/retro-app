@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Flex, Group, Modal, Paper, Text } from '@mantine/core';
+import { Badge, Button, Flex, Group, Modal, Paper, Text, Tooltip } from '@mantine/core';
 import classNames from 'classnames';
 import { IconSquareRoundedX } from '@tabler/icons-react';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -81,8 +81,11 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
         opened={isCloseSprintModalOpen}
         onClose={() => setIsCloseSprintModalOpen(false)}
       >
-        <Flex direction='column' gap='xl'>
-          <div>{`Are you sure you want to close ${sprint.title}?`}</div>
+        <Flex direction='column' gap='xs'>
+          <div>
+            <p>{`Are you sure you want to close ${sprint.title}?`}</p>
+            <p>You will no longer be able to make any changes to the board or its contents.</p>
+          </div>
           <Flex justify='flex-end' gap='md'>
             <Button
               variant='outline'
@@ -115,7 +118,9 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
         <Flex justify='flex-end' direction='row' gap='xs'>
           {(shouldRenderCloseSprintButton && sprint.isOpen) && (
             <div className={styles.closeSprintButton}>
-              <IconSquareRoundedX style={{ cursor: 'pointer' }} color='red' size={20} onClick={() => setIsCloseSprintModalOpen(true)} />
+              <Tooltip color='red' label='Close Sprint'>
+                <IconSquareRoundedX style={{ cursor: 'pointer' }} color='red' size={20} onClick={() => setIsCloseSprintModalOpen(true)} />
+              </Tooltip>
             </div>
           )}
         </Flex>
