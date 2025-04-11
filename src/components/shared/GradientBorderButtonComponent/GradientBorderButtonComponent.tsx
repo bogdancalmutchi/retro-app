@@ -1,17 +1,19 @@
 import * as React from 'react';
-import { Box, Button, Transition } from '@mantine/core';
+import { Box, Button, Tooltip, Transition } from '@mantine/core';
 
 import customStyles from './GradientBorderButtonComponent.module.scss';
 
 interface IGradientBorderButtonComponentProps {
   unpublishedNotes: any[];
   onPublishNotes: () => void;
+  disabled: boolean;
 }
 
 const GradientBorderButtonComponent = (props: IGradientBorderButtonComponentProps) => {
   const {
     unpublishedNotes,
-    onPublishNotes
+    onPublishNotes,
+    disabled
   } = props;
 
   return (
@@ -22,16 +24,19 @@ const GradientBorderButtonComponent = (props: IGradientBorderButtonComponentProp
       timingFunction='ease'
     >
       {(styles) => (
-        <Box className={`${customStyles.gradientBorderWrapper} ${customStyles.transitionBox}`} style={styles}>
-          <Button
-            variant='default'
-            radius={6}
-            className={customStyles.gradientButton}
-            onClick={onPublishNotes}
-          >
-            Publish All Notes
-          </Button>
-        </Box>
+        <Tooltip disabled={!disabled} color='blue' label="Can't publish while editing">
+          <Box className={`${customStyles.gradientBorderWrapper} ${customStyles.transitionBox}`} style={styles}>
+            <Button
+              variant='default'
+              radius={6}
+              className={customStyles.gradientButton}
+              onClick={onPublishNotes}
+              disabled={disabled}
+            >
+              Publish All Notes
+            </Button>
+          </Box>
+        </Tooltip>
       )}
     </Transition>
   );

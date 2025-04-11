@@ -18,15 +18,18 @@ import { useSprint } from '../contexts/SprintContext';
 import SprintHeaderComponent from './SprintHeaderComponent/SprintHeaderComponent';
 import { useUser } from '../contexts/UserContext';
 import GradientBorderButtonComponent from './shared/GradientBorderButtonComponent/GradientBorderButtonComponent';
+import { ISprint } from './CardComponent/CardComponent';
 
 const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
   const { userId } = useUser();
   const navigate = useNavigate();
   const { setIsOpen, setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
+  const [currentSprint, setCurrentSprint] = useState<Partial<ISprint>>();
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [ownPrivateNotes, setOwnPrivateNotes] = useState<any[]>([]);
+  const [noActionsAllowed, setNoActionsAllowed] = React.useState(false);
 
   useEffect(() => {
     if (!sprintId) return;
@@ -38,23 +41,7 @@ const SprintBoardComponent = () => {
     const itemsRef = collection(sprintDocRef, 'items');
     const q = query(itemsRef, orderBy('order'));
 
-    const fetchSprint = async () => {
-      try {
-        const sprintDoc = await getDoc(sprintDocRef);
-        if (sprintDoc.exists()) {
-          const data = sprintDoc.data();
-          setSprintTitle(data.title || sprintId);
-          setIsOpen(data.isOpen);
-        } else {
-          navigate('/');
-        }
-      } catch (err) {
-        console.error('Failed to load sprint info:', err);
-        setSprintTitle(`Sprint ${sprintId} (error)`);
-      }
-    };
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+  const unsubscribeItems = onSnapshot(q, (snapshot) => {
       const allItems = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
@@ -69,9 +56,23 @@ const SprintBoardComponent = () => {
       setMessages(visibleItems);
     });
 
-    fetchSprint();
-    return () => unsubscribe();
-  }, [sprintId, setSprintId]); // Ensure useEffect runs when sprintId or setSprintId changes
+  // Listen for changes to the sprint document (e.g., isOpen toggled)
+  const unsubscribeSprint = onSnapshot(sprintDocRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      setSprintTitle(data.title || sprintId);
+      setCurrentSprint(data);
+      setIsOpen(data.isOpen);
+    } else {
+      navigate('/');
+    }
+  });
+
+  return () => {
+    unsubscribeItems();
+    unsubscribeSprint(); // Clean up both subscriptions
+  };
+}, [sprintId, setSprintId]);
 
   const handleAddMessage = async (message: string, category: string) => {
     if (!contextSprintId) return;
@@ -108,13 +109,25 @@ const SprintBoardComponent = () => {
     }
   };
 
+  const handleNoActionsAllowed = (allowed: boolean) => {
+    setNoActionsAllowed(allowed)
+  }
+
   return (
     <div>
-      <GradientBorderButtonComponent onPublishNotes={onPublishNotes} unpublishedNotes={ownPrivateNotes}/>
+      {currentSprint?.isOpen && (
+        <GradientBorderButtonComponent
+          onPublishNotes={onPublishNotes}
+          unpublishedNotes={ownPrivateNotes}
+          disabled={noActionsAllowed}
+        />
+      )}
       <SprintHeaderComponent sprintTitle={sprintTitle} />
       <ThreeColumnsGridComponent
         messages={messages}
         onAddMessage={handleAddMessage}
+        onNoActionsAllowed={handleNoActionsAllowed}
+        noActionsAllowed={noActionsAllowed}
       />
     </div>
   );

@@ -21,6 +21,11 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   const [sprintName, setSprintName] = React.useState<string>('');
   const [sprintTeam, setSprintTeam] = React.useState<string>('');
 
+  const handleCloseModal = () => {
+    onClose();
+    setSprintName('');
+  }
+
   const onCreateNewSprintBoard = async () => {
     try {
       // Create a new sprint document in Firestore
@@ -39,7 +44,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   };
 
   return (
-    <Modal centered opened={isModalOpen} onClose={onClose} title='Create Board'>
+    <Modal centered opened={isModalOpen} onClose={handleCloseModal} title='Create Board'>
       <div>
         <div className={styles.modalBodyContainer}>
           <TextInput
@@ -62,10 +67,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
         <div className={styles.buttonContainer}>
           <Button
             variant='outline'
-            onClick={() => {
-              onClose();
-              setSprintName('');
-            }}
+            onClick={handleCloseModal}
           >
             Cancel
           </Button>

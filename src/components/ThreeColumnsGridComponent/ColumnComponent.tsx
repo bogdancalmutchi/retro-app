@@ -20,10 +20,18 @@ interface IColumnComponentProps {
   header: string;
   messages: INote[];
   onSubmit: (message: string) => void;
+  onNoActionsAllowed: (allowed: boolean) => void;
+  noActionsAllowed: boolean;
 }
 
 const ColumnComponent = (props: IColumnComponentProps) => {
-  const { header, messages, onSubmit } = props;
+  const {
+    header,
+    messages,
+    onSubmit,
+    onNoActionsAllowed,
+    noActionsAllowed
+  } = props;
 
   const { sprintId, isOpen: isSprintOpen } = useSprint();
   const { userId } = useUser();
@@ -51,7 +59,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   }, [messages]);
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) return;
+    if (!result.destination || !isSprintOpen) return;
 
     const reordered = Array.from(noteItems);
     const [moved] = reordered.splice(result.source.index, 1);
@@ -127,6 +135,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const handleEditMode = (note: INote) => {
     setNoteToBeEdited(note);
     setInEditMode(true);
+    onNoActionsAllowed(true);
   };
 
   const renderDeleteModal = () => {
@@ -173,18 +182,26 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                   handleEdit(note.id, {text: newNote.trim()})
                 }
                 setInEditMode(false);
+                onNoActionsAllowed(false)
               }}
             />
             <IconX
               className={styles.icon}
               size={18}
-              onClick={() => setInEditMode(false)}
+              onClick={() => {
+                setInEditMode(false);
+                onNoActionsAllowed(false);
+              }}
             />
           </div>
         </>
       );
     }
-    return note.text;
+    return (
+      <div className={styles.wysiwigNoteText}>
+        {note.text}
+      </div>
+    );
   };
 
   const renderNoteCard = (note: INote) => {
@@ -194,7 +211,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
           <NoteReporterComponent userId={note.createdBy} />
           {!note.published && (
             <Tooltip color='blue' label='Only visible to you'>
-              <IconLock size={18}/>
+              <IconLock color='white' size={18}/>
             </Tooltip>
           )}
         </div>
@@ -203,8 +220,10 @@ const ColumnComponent = (props: IColumnComponentProps) => {
         </div>
         <div
           className={classNames(
-            styles.cardFooter,
-            {[styles.apCardFooter]: note.category === NoteCategory.ActionItem || !note.published}
+            {
+              [styles.cardFooter]: note.category !== NoteCategory.ActionItem,
+              [styles.apCardFooter]: !inEditMode && (note.category === NoteCategory.ActionItem || !note.published)
+            }
           )}
         >
           {(note.category !== NoteCategory.ActionItem && note.published) &&
@@ -213,7 +232,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                 <div className={styles.likesContainer}>
                   <div>
                     <IconThumbUp
-                      className={classNames(styles.icon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
+                      className={classNames(styles.thumbsIcon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
                       size={18}
                       onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsUp(note)}
                     />
@@ -221,7 +240,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                   </div>
                   <div>
                     <IconThumbDown
-                      className={classNames(styles.icon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
+                      className={classNames(styles.thumbsIcon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
                       size={18}
                       onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsDown(note)}
                     />
@@ -231,15 +250,17 @@ const ColumnComponent = (props: IColumnComponentProps) => {
               </DisabledTooltipWrapper>
             )
           }
-          {(!inEditMode && isSprintOpen && isOwner(note)) && (
-            <div className={styles.editDeleteContainer}>
+          <div className={styles.editDeleteContainer}>
+          {(!inEditMode && isSprintOpen && isOwner(note) && !noActionsAllowed) && (
+            <>
               <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
               <IconTrash className={styles.icon} size={18} onClick={() => {
                 setNoteToBeDeleted(note);
                 setIsDeleteModalOpen(true);
               }}/>
-            </div>
+            </>
           )}
+          </div>
         </div>
       </div>
     )
@@ -265,9 +286,20 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     )
   };
 
+  const renderColumnHeader = (columnHeader: string) => {
+    switch (columnHeader) {
+      case 'The Good':
+        return <div className={classNames(styles.header, styles.goodItemColumnHeader)}>{columnHeader}</div>
+      case 'The Bad':
+        return <div className={classNames(styles.header, styles.badItemColumnHeader)}>{columnHeader}</div>
+      case 'Action Items':
+        return <div className={classNames(styles.header, styles.actionItemColumnHeader)}>{columnHeader}</div>
+    }
+  };
+
   return (
     <div className={styles.columnContainer}>
-      <div className={styles.header}>{header}</div>
+      {renderColumnHeader(header)}
       <div className={styles.contentWithInput}>
         {renderInputContainer()}
         {renderDeleteModal()}

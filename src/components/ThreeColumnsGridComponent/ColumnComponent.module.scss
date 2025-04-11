@@ -48,6 +48,18 @@
   background-color: $actionItemColor;
 }
 
+.goodItemColumnHeader {
+  color: $goodItemColumnHeader;
+}
+
+.badItemColumnHeader {
+  color: $badItemColor;
+}
+
+.actionItemColumnHeader {
+  color: $actionItemColor;
+}
+
 .addNoteButton {
   min-width: fit-content;
 }
@@ -84,6 +96,7 @@
 .editDeleteContainer {
   display: flex;
   gap: 8px;
+  min-height: 22px;
 }
 
 .editNoteActionsContainer {
@@ -101,12 +114,17 @@
 
 .icon {
   cursor: pointer;
+  stroke: white;
+}
+
+.thumbsIcon {
+  cursor: pointer;
 }
 
 .disabledIcon {
   pointer-events: none;
   cursor: not-allowed;
-  stroke: gray;
+  stroke: darkgray;
 }
 
 .activeLikeIcon {
@@ -129,4 +147,8 @@
 .dragging {
   border-radius: 8px;
   box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.wysiwigNoteText {
+  white-space: pre-wrap;
 }

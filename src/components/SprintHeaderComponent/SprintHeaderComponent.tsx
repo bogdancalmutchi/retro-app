@@ -6,7 +6,7 @@ import {
   IconX
 } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { Badge, Flex, TextInput, Tooltip } from '@mantine/core';
+import { Badge, Flex, Text, TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -57,7 +57,6 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     if (inEditMode) {
       return (
         <TextInput
-          label='Sprint Name'
           defaultValue={newSprintTitle || sprintTitle}
           onChange={(event) => setNewSprintTitle(event.target.value)}
           type='text'
@@ -99,7 +98,12 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
           onClick={() => isSprintOpen && setInEditMode(true)}
         >
           <Flex justify='center' direction='row' gap='xs' align='center'>
-            {newSprintTitle || sprintTitle}
+            <Text
+              variant='gradient'
+              gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
+            >
+              {newSprintTitle || sprintTitle}
+            </Text>
             <Badge size='md' variant='light' color={isSprintOpen ? 'blue' : 'red'}>{isSprintOpen? 'Open' : 'Closed'}</Badge>
           </Flex>
         </div>
@@ -108,12 +112,14 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
   };
 
   return (
-    <div className={styles.headerContainer}>
-      <div className={styles.titleAndButtonContainer}>
-        {renderSprintTitle()}
-        {renderBackToHomeButton()}
+    <>
+      <div className={styles.headerContainer}>
+        <div className={styles.titleAndButtonContainer}>
+          {renderSprintTitle()}
+        </div>
       </div>
-    </div>
+      {renderBackToHomeButton()}
+    </>
   );
 };
 

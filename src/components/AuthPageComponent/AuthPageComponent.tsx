@@ -39,6 +39,22 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   const [incorrectPasswordError, setIncorrectPasswordError] = useState('');
   const [userExistsError, setUserExistsError] = useState('');
 
+  const resetLoginModalState = () => {
+    setIsLoginModalRendered(false);
+    setLoginEmailInput('');
+    setLoginPasswordInput('');
+    setIncorrectEmailError('');
+    setIncorrectPasswordError('');
+  };
+
+  const resetSignupModalState = () => {
+    setIsSignupModalRendered(false);
+    setSignupDisplayName('');
+    setSignupEmailInput('');
+    setSignupPasswordInput('');
+    setEmailDomainError(false);
+  };
+
   const registerUser = async (displayName: string, email: string, password: string) => {
     try {
     const userId = uuidv4();
@@ -124,13 +140,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
         centered
         title='Create new user'
         opened={isSignupModalRendered}
-        onClose={() => {
-          setIsSignupModalRendered(false);
-          setSignupDisplayName('');
-          setSignupEmailInput('');
-          setSignupPasswordInput('');
-          setEmailDomainError(false);
-        }}
+        onClose={resetSignupModalState}
       >
         <Flex direction='column' gap='md'>
           <TextInput
@@ -147,7 +157,10 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             value={signupEmailInput}
             error={emailDomainError ? 'Email domain not allowed.' : userExistsError}
             withAsterisk
-            onFocus={() => setEmailDomainError(false)}
+            onFocus={() => {
+              setEmailDomainError(false);
+              setUserExistsError('');
+            }}
             onChange={(event) => setSignupEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
@@ -185,11 +198,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
         centered
         title='Login'
         opened={isLoginModalRendered}
-        onClose={() => {
-         setIsLoginModalRendered(false);
-         setLoginEmailInput('');
-         setLoginPasswordInput('');
-       }}
+        onClose={resetLoginModalState}
       >
         <Flex direction='column' gap='md'>
           <TextInput
@@ -198,6 +207,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             placeholder='e-mail'
             value={loginEmailInput}
             error={incorrectEmailError}
+            onFocus={() => setIncorrectEmailError('')}
             onChange={(event) => setLoginEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
@@ -206,6 +216,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             value={loginPasswordInput}
             error={incorrectPasswordError}
             type='password'
+            onFocus={() => setIncorrectPasswordError('')}
             onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
             onKeyDown={async (event) => {
               if (event.key === 'Enter' && !isInputEmpty) {

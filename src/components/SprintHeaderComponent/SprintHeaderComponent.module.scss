@@ -1,12 +1,16 @@
 .headerContainer {
   display: flex;
   align-items: center;
-  min-height: 80px;
+  justify-content: center;
+  min-height: 54px;
+  padding-top: 15px;
 }
 
 .header {
-  font-size: 32px;
-  font-weight: bold;
+  & div > p {
+    font-size: 24px;
+    font-weight: bold;
+  }
 }
 
 .icon {
@@ -36,6 +40,8 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  margin-left: 16px;
+  width: fit-content;
   &:hover {
     text-decoration: underline;
   }

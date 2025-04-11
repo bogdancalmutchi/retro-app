@@ -24,12 +24,16 @@ export interface INote {
 interface IThreeGridComponentProps {
   messages: INote[];
   onAddMessage: (message: string, category: string) => void;
+  onNoActionsAllowed: (allowed: boolean) => void;
+  noActionsAllowed: boolean;
 }
 
 const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
   const {
     messages,
-    onAddMessage
+    onAddMessage,
+    onNoActionsAllowed,
+    noActionsAllowed
   } = props;
 
   const goodMessages = messages.filter((msg) => msg.category === NoteCategory.Good);
@@ -43,16 +47,22 @@ const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
           header='The Good'
           messages={goodMessages}
           onSubmit={(message) => onAddMessage(message, 'good')}
+          onNoActionsAllowed={onNoActionsAllowed}
+          noActionsAllowed={noActionsAllowed}
         />
         <ColumnComponent
           header='The Bad'
           messages={badMessages}
           onSubmit={(message) => onAddMessage(message, 'bad')}
+          onNoActionsAllowed={onNoActionsAllowed}
+          noActionsAllowed={noActionsAllowed}
         />
         <ColumnComponent
           header='Action Items'
           messages={actionMessages}
           onSubmit={(message) => onAddMessage(message, 'action')}
+          onNoActionsAllowed={onNoActionsAllowed}
+          noActionsAllowed={noActionsAllowed}
         />
       </SimpleGrid>
     </Container>
