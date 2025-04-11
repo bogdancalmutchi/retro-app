@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 import { db } from '../../firebase';
 import CreateSprintModalComponent from '../CreateSprintModalComponent/CreateSprintModalComponent';
@@ -17,36 +17,35 @@ const HomePageComponent = () => {
   const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchSprints();
-  }, []);
-
-  const fetchSprints = async () => {
     const sprintsRef = collection(db, 'sprints');
     const q = query(sprintsRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
 
-    const sprintList = await Promise.all(
-      snapshot.docs.map(async (docSnap) => {
-        const sprintId = docSnap.id;
-        const sprintData = docSnap.data();
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const sprintList = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const sprintId = docSnap.id;
+          const sprintData = docSnap.data();
 
-        const itemsRef = collection(db, 'sprints', sprintId, 'items');
-        const itemsSnap = await getDocs(itemsRef);
-        const items = itemsSnap.docs.map((itemDoc) => ({
-          id: itemDoc.id,
-          ...itemDoc.data(),
-        }));
+          const itemsRef = collection(db, 'sprints', sprintId, 'items');
+          const itemsSnap = await getDocs(itemsRef);
+          const items = itemsSnap.docs.map((itemDoc) => ({
+            id: itemDoc.id,
+            ...itemDoc.data(),
+          }));
 
-        return {
-          id: sprintId,
-          ...sprintData,
-          items,
-        };
-      })
-    );
+          return {
+            id: sprintId,
+            ...sprintData,
+            items,
+          };
+        })
+      );
 
-    setSprints(sprintList);
-  };
+      setSprints(sprintList);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const filteredSprints = sprints.filter(
     (sprint) => sprint.team === selectedTeam

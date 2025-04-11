@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { Button, Modal, Textarea, Tooltip } from '@mantine/core';
 import { IconCheck, IconLock, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
 
 import { INote, NoteCategory } from './ThreeColumnsGridComponent';
 import { useSprint } from '../../contexts/SprintContext';
@@ -33,6 +34,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const [noteToBeDeleted, setNoteToBeDeleted] = useState<INote>(undefined);
   const [newNote, setNewNote] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [noteItems, setNoteItems] = useState<INote[]>(messages);
 
   useEffect(() => {
     if (inEditMode && noteToBeEdited) {
@@ -42,6 +44,34 @@ const ColumnComponent = (props: IColumnComponentProps) => {
 
   const isOwner = (note: INote) => {
     return userId && userId === note.createdBy;
+  };
+
+  useEffect(() => {
+    setNoteItems(messages);
+  }, [messages]);
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+
+    const reordered = Array.from(noteItems);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+    setNoteItems(reordered);
+
+    try {
+      const updates = reordered
+        .map((note, index) => ({ note, index }))
+        .filter(({ note, index }) => note.order !== index); // Only update changed
+
+      const updatePromises = updates.map(({ note, index }) => {
+        const noteRef = doc(db, 'sprints', sprintId, 'items', note.id);
+        return updateDoc(noteRef, { order: index });
+      });
+
+      await Promise.all(updatePromises);
+    } catch (err) {
+      console.error('Failed to update reordered notes:', err);
+    }
   };
 
   const handleSubmit = () => {
@@ -215,18 +245,6 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     )
   };
 
-  const messagesList = messages.map((note, i) => {
-    return (
-      <div key={i} className={classNames(styles.itemContainer, {
-        [styles.goodItemContainer]: note.category === NoteCategory.Good,
-        [styles.badItemContainer]: note.category === NoteCategory.Bad,
-        [styles.actionItemContainer]: note.category === NoteCategory.ActionItem
-      })}>
-        {renderNoteCard(note)}
-      </div>
-    )
-  });
-
   const renderInputContainer = () => {
     return (
       <DisabledTooltipWrapper disabled={isSprintOpen}>
@@ -253,7 +271,34 @@ const ColumnComponent = (props: IColumnComponentProps) => {
       <div className={styles.contentWithInput}>
         {renderInputContainer()}
         {renderDeleteModal()}
-        <div>{messagesList}</div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId={`droppable-${header}`}>
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {noteItems.map((note, index) => (
+                  <Draggable draggableId={note.id} index={index} key={note.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={classNames(styles.itemContainer, {
+                          [styles.goodItemContainer]: note.category === NoteCategory.Good,
+                          [styles.badItemContainer]: note.category === NoteCategory.Bad,
+                          [styles.actionItemContainer]: note.category === NoteCategory.ActionItem,
+                          [styles.dragging]: snapshot.isDragging
+                        })}
+                      >
+                        {renderNoteCard(note)}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
     </div>
   );

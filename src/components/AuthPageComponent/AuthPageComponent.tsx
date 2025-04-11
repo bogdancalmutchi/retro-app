@@ -129,6 +129,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       >
         <Flex direction='column' gap='md'>
           <TextInput
+            data-autofocus
             label='Name'
             placeholder='Name'
             value={signupDisplayName}
@@ -179,6 +180,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       >
         <Flex direction='column' gap='md'>
           <TextInput
+            data-autofocus
             label='Email'
             placeholder='e-mail'
             value={loginEmailInput}

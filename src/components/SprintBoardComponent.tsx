@@ -35,7 +35,7 @@ const SprintBoardComponent = () => {
 
     const sprintDocRef = doc(db, 'sprints', sprintId);
     const itemsRef = collection(sprintDocRef, 'items');
-    const q = query(itemsRef, orderBy('createdAt', 'desc'));
+    const q = query(itemsRef, orderBy('order'));
 
     const fetchSprint = async () => {
       try {
@@ -82,7 +82,8 @@ const SprintBoardComponent = () => {
       createdAt: new Date(),
       published: category === NoteCategory.ActionItem,
       likes: 0,
-      dislikes: 0
+      dislikes: 0,
+      order: messages.length
     });
   };
 

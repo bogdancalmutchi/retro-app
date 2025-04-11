@@ -6,13 +6,12 @@ import {
   IconX
 } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { TextInput, Tooltip } from '@mantine/core';
+import { Badge, Flex, TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
-import DisabledTooltipWrapper from '../shared/DisabledTooltipWrapper/DisabledTooltipWrapper';
 
 import styles from './SprintHeaderComponent.module.scss';
 
@@ -99,7 +98,10 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
           style={{ cursor: isSprintOpen ? 'pointer' : 'default' }}
           onClick={() => isSprintOpen && setInEditMode(true)}
         >
-          {newSprintTitle || sprintTitle}
+          <Flex justify='center' direction='row' gap='xs' align='center'>
+            {newSprintTitle || sprintTitle}
+            <Badge size='md' variant='light' color={isSprintOpen ? 'blue' : 'red'}>{isSprintOpen? 'Open' : 'Closed'}</Badge>
+          </Flex>
         </div>
       </Tooltip.Floating>
     );
