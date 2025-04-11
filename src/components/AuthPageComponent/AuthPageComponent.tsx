@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
 import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
@@ -22,6 +22,8 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   } = props;
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = location.state?.from?.pathname || '/';
   const { setUserId, setDisplayName, setEmail } = useUser();
 
   const allowedDomain = '@intralinks.com';
@@ -76,7 +78,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
     }
   };
 
-  const loginUser = async (email: string, password: string) => {
+  const loginUser = async (email: string, password: string, redirectPath: string = '/') => {
     try {
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
@@ -110,7 +112,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       setIncorrectEmailError(null);
       setIncorrectPasswordError(null);
 
-      navigate('/');
+      navigate(redirectPath);
     } catch (error) {
       console.error('Error logging in user:', error);
     }
@@ -207,13 +209,13 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
             onKeyDown={async (event) => {
               if (event.key === 'Enter' && !isInputEmpty) {
-                await loginUser(loginEmailInput, loginPasswordInput)
+                await loginUser(loginEmailInput, loginPasswordInput, redirectPath)
               }
             }}
           />
           <Flex justify='flex-end'>
             <Button
-              onClick={() => loginUser(loginEmailInput, loginPasswordInput)}
+              onClick={() => loginUser(loginEmailInput, loginPasswordInput, redirectPath)}
               disabled={isInputEmpty}
             >
               Login

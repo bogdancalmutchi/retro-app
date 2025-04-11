@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   collection,
   query,
@@ -22,6 +22,7 @@ import GradientBorderButtonComponent from './shared/GradientBorderButtonComponen
 const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
   const { userId } = useUser();
+  const navigate = useNavigate();
   const { setIsOpen, setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
@@ -45,7 +46,7 @@ const SprintBoardComponent = () => {
           setSprintTitle(data.title || sprintId);
           setIsOpen(data.isOpen);
         } else {
-          setSprintTitle(`Sprint ${sprintId} (not found)`);
+          navigate('/');
         }
       } catch (err) {
         console.error('Failed to load sprint info:', err);
