@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { Button, Modal, Select, TextInput } from '@mantine/core';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
+
+import { db } from '../../firebase';
+import { useUser } from '../../contexts/UserContext';
 
 import styles from './CreateSprintModalComponent.module.scss';
 
@@ -18,6 +20,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   } = props;
 
   const navigate = useNavigate();
+  const { team: currentUserTeam } = useUser();
   const [sprintName, setSprintName] = React.useState<string>('');
   const [sprintTeam, setSprintTeam] = React.useState<string>('');
 
@@ -61,6 +64,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
             data={['Protoss', 'Tigers']}
             searchable
             checkIconPosition='right'
+            defaultValue={currentUserTeam}
             onChange={(option) => setSprintTeam(option)}
           />
         </div>

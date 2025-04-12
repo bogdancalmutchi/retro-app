@@ -12,6 +12,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
+import { useUser } from '../../contexts/UserContext';
 
 import styles from './SprintHeaderComponent.module.scss';
 
@@ -26,6 +27,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
 
   const { sprintId, isOpen: isSprintOpen } = useSprint();
   const navigate = useNavigate();
+  const { team } = useUser();
   const [inEditMode, setInEditMode] = useState(false);
   const [newSprintTitle, setNewSprintTitle] = useState('');
 
@@ -36,7 +38,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
   }, [inEditMode, sprintTitle]);
 
   const renderBackToHomeButton = () => (
-    <div className={styles.backButtonContainer} onClick={() => navigate('/')}>
+    <div className={styles.backButtonContainer} onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}>
       <IconArrowNarrowLeft size={14} />
       Back to all sprints page
     </div>

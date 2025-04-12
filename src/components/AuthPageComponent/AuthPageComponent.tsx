@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
 import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
-import { Avatar, Button, Center, Flex, Group, Modal, Paper, Text, TextInput } from '@mantine/core';
+import { Avatar, Button, Center, Flex, Group, Modal, Paper, Radio, Text, TextInput } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useUser } from '../../contexts/UserContext';
@@ -24,13 +24,14 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.from?.pathname || '/';
-  const { setUserId, setDisplayName, setEmail } = useUser();
+  const { setUserId, setDisplayName, setEmail, setTeam } = useUser();
 
   const allowedDomain = '@intralinks.com';
   const [emailDomainError, setEmailDomainError] = useState(false);
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
   const [signupDisplayName, setSignupDisplayName] = useState('');
+  const [signupTeam, setSignupTeam] = useState('');
   const [loginEmailInput, setLoginEmailInput] = useState('');
   const [loginPasswordInput, setLoginPasswordInput] = useState('');
   const [isSignupModalRendered, setIsSignupModalRendered] = useState(false);
@@ -55,7 +56,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
     setEmailDomainError(false);
   };
 
-  const registerUser = async (displayName: string, email: string, password: string) => {
+  const registerUser = async (displayName: string, email: string, password: string, team: string) => {
     try {
     const userId = uuidv4();
 
@@ -77,18 +78,22 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       await setDoc(userRef, {
         email,
         displayName,
+        team,
         id: userId,
-        passwordHash: hashedPassword,
+        passwordHash: hashedPassword
       });
 
       Cookies.set('userId', userId, { expires: 7, path: '' });
       Cookies.set('displayName', displayName, { expires: 7, path: '' });
       Cookies.set('email', email, { expires: 7, path: '' });
+      Cookies.set('team', team, { expires: 7, path: '' });
+
       setUserId(userId);
       setDisplayName(displayName);
       setEmail(email);
+      setTeam(team);
 
-      navigate('/');
+      navigate(`/?team=${encodeURIComponent(team)}`);
     } catch (error) {
       console.error('Error registering user:', error);
     }
@@ -115,20 +120,23 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
 
       const userId = userDoc.id;
       const displayName = data.displayName;
+      const userTeam = data.team;
 
       // Store the UUID in a cookie
       Cookies.set('userId', userId, { expires: 7, path: '' });
       Cookies.set('displayName', displayName, { expires: 7, path: '' });
       Cookies.set('email', email, { expires: 7, path: '' });
+      Cookies.set('userTeam', userTeam, { expires: 7, path: '' });
 
       setUserId(userId);
       setDisplayName(displayName);
       setEmail(email);
+      setTeam(userTeam);
 
       setIncorrectEmailError(null);
       setIncorrectPasswordError(null);
 
-      navigate(redirectPath);
+      navigate(`/?team=${encodeURIComponent(userTeam)}`);
     } catch (error) {
       console.error('Error logging in user:', error);
     }
@@ -171,6 +179,16 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             withAsterisk
             onChange={(event) => setSignupPasswordInput(event.currentTarget.value)}
           />
+          <Radio.Group
+            name='team'
+            label='Select Team'
+            withAsterisk
+          >
+            <Group mt='xs'>
+              <Radio onChange={(event) => setSignupTeam(event.currentTarget.value)} value='Protoss' label='Protoss' />
+              <Radio onChange={(event) => setSignupTeam(event.currentTarget.value)} value='Tigers' label='Tigers' />
+            </Group>
+          </Radio.Group>
           <Flex justify='flex-end'>
             <Button
               onClick={async () => {
@@ -179,9 +197,14 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
                   return;
                 }
                 setEmailDomainError(false);
-                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput)
+                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam)
               }}
-              disabled={!signupDisplayName.trim().length || !signupEmailInput.trim().length || !signupPasswordInput.trim().length}
+              disabled={
+                !signupDisplayName.trim().length ||
+                !signupEmailInput.trim().length ||
+                !signupPasswordInput.trim().length ||
+                !signupTeam
+              }
             >
               Create
             </Button>

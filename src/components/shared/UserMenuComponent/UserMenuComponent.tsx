@@ -34,6 +34,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     Cookies.remove('userId', { path: '/retro-app' });
     Cookies.remove('displayName', { path: '/retro-app' });
     Cookies.remove('email', { path: '/retro-app' });
+    Cookies.remove('userTeam', { path: '/retro-app' });
 
     setUserId(null);
     setDisplayName(null);

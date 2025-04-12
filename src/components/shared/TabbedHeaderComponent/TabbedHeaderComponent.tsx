@@ -22,7 +22,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
   const tabs = ['Protoss', 'Tigers'];
-  const { displayName, email, userId } = useUser();
+  const { displayName, email, userId, team } = useUser();
 
   return (
     <div className={styles.header}>
@@ -31,7 +31,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
           <div className={styles.headerText}>
             <Avatar
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/')}
+              onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}
               radius='md'
               src='/retro-app/favicon.svg'
             />

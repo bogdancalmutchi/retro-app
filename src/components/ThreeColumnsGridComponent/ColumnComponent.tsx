@@ -165,7 +165,6 @@ const ColumnComponent = (props: IColumnComponentProps) => {
   const renderNoteText = (note: INote) => {
     if (inEditMode && note.id === noteToBeEdited.id) {
       return (
-        <>
         <Textarea
           error={!newNote.trim().length && 'Note cannot be empty.'}
           autosize
@@ -173,28 +172,6 @@ const ColumnComponent = (props: IColumnComponentProps) => {
           onChange={(event) => setNewNote(event.target.value)}
           maxLength={512}
         />
-          <div className={styles.editNoteActionsContainer}>
-            <IconCheck
-              className={classNames(styles.icon, { [styles.disabledIcon]: (note.text === newNote || !newNote.trim().length) })}
-              size={18}
-              onClick={() => {
-                if (note.text !== newNote && newNote.trim().length) {
-                  handleEdit(note.id, {text: newNote.trim()})
-                }
-                setInEditMode(false);
-                onNoActionsAllowed(false)
-              }}
-            />
-            <IconX
-              className={styles.icon}
-              size={18}
-              onClick={() => {
-                setInEditMode(false);
-                onNoActionsAllowed(false);
-              }}
-            />
-          </div>
-        </>
       );
     }
     return (
@@ -222,7 +199,9 @@ const ColumnComponent = (props: IColumnComponentProps) => {
           className={classNames(
             {
               [styles.cardFooter]: note.category !== NoteCategory.ActionItem,
-              [styles.apCardFooter]: !inEditMode && (note.category === NoteCategory.ActionItem || !note.published)
+              [styles.apCardFooter]: (
+                !inEditMode && (note.category === NoteCategory.ActionItem || !note.published)
+              ) || (inEditMode && !note.published)
             }
           )}
         >
@@ -250,16 +229,39 @@ const ColumnComponent = (props: IColumnComponentProps) => {
               </DisabledTooltipWrapper>
             )
           }
-          <div className={styles.editDeleteContainer}>
-          {(!inEditMode && isSprintOpen && isOwner(note) && !noActionsAllowed) && (
-            <>
-              <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
-              <IconTrash className={styles.icon} size={18} onClick={() => {
-                setNoteToBeDeleted(note);
-                setIsDeleteModalOpen(true);
-              }}/>
-            </>
-          )}
+          <div className={classNames(styles.editDeleteContainer, { [styles.apEditDeleteContainer]: inEditMode && note.category === NoteCategory.ActionItem })}>
+            {(!inEditMode && isSprintOpen && isOwner(note) && !noActionsAllowed) && (
+              <>
+                <IconPencil className={styles.icon} size={18} onClick={() => handleEditMode(note)}/>
+                <IconTrash className={styles.icon} size={18} onClick={() => {
+                  setNoteToBeDeleted(note);
+                  setIsDeleteModalOpen(true);
+                }}/>
+              </>
+            )}
+            {(inEditMode && note.id === noteToBeEdited.id) && (
+              <>
+                <IconCheck
+                  className={classNames(styles.icon, { [styles.disabledIcon]: (note.text === newNote || !newNote.trim().length) })}
+                  size={18}
+                  onClick={() => {
+                    if (note.text !== newNote && newNote.trim().length) {
+                      handleEdit(note.id, {text: newNote.trim()})
+                    }
+                    setInEditMode(false);
+                    onNoActionsAllowed(false)
+                  }}
+                />
+                <IconX
+                  className={styles.icon}
+                  size={18}
+                  onClick={() => {
+                    setInEditMode(false);
+                    onNoActionsAllowed(false);
+                  }}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

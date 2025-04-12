@@ -73,6 +73,7 @@
   margin-top: 8px;
 }
 
+.apEditDeleteContainer,
 .apCardFooter {
   justify-content: flex-end;
 }
@@ -93,10 +94,15 @@
   }
 }
 
+.apEditDeleteContainer,
 .editDeleteContainer {
   display: flex;
   gap: 8px;
   min-height: 22px;
+}
+
+.apEditDeleteContainer {
+  margin-top: 8px;
 }
 
 .editNoteActionsContainer {
@@ -142,6 +148,7 @@
 
 .noteContent {
   padding: 8px;
+  min-height: 54px;
 }
 
 .dragging {
