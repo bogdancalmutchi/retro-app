@@ -46,11 +46,8 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   };
 
   return (
-    <Modal centered opened={isModalOpen} onClose={handleCloseModal} title='Create Board'>
+    <Modal centered opened={isModalOpen} onClose={handleCloseModal} title={`Create Board for Team ${currentSelectedTeam}`}>
       <div>
-        <div className={styles.modalInfo}>
-          Create a new sprint board for team <span>{currentSelectedTeam}</span>.
-        </div>
         <div className={styles.modalBodyContainer}>
           <TextInput
             label='Sprint Board Name'
@@ -58,8 +55,13 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
             maxLength={128}
             value={sprintName}
             data-autofocus
-            onChange={(event) => setSprintName(event.target.value)}
             type='text'
+            onChange={(event) => setSprintName(event.target.value)}
+            onKeyDown={async (event) => {
+              if (event.key === 'Enter' && sprintName.trim().length) {
+                await onCreateNewSprintBoard();
+              }
+            }}
           />
         </div>
         <div className={styles.buttonContainer}>

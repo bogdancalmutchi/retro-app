@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useUser } from '../../contexts/UserContext';
 import { db } from '../../firebase';
+import { cookieLifetime } from '../../utils/LocalStorage';
 
 import styles from './AuthPageComponent.module.scss';
 
@@ -82,10 +83,10 @@ const AuthPageComponent = () => {
         passwordHash: hashedPassword
       });
 
-      Cookies.set('userId', userId, { expires: 7, path: '' });
-      Cookies.set('displayName', displayName, { expires: 7, path: '' });
-      Cookies.set('email', email, { expires: 7, path: '' });
-      Cookies.set('userTeam', team, { expires: 7, path: '' });
+      Cookies.set('userId', userId, { expires: cookieLifetime, path: '' });
+      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '' });
+      Cookies.set('email', email, { expires: cookieLifetime, path: '' });
+      Cookies.set('userTeam', team, { expires: cookieLifetime, path: '' });
 
       setUserId(userId);
       setDisplayName(displayName);
@@ -97,6 +98,22 @@ const AuthPageComponent = () => {
       console.error('Error registering user:', error);
     }
   };
+
+  const onClickRegister = async () => {
+    if (!isEmailFormatValid(signupEmailInput)) {
+      setEmailFormatError(true);
+      return;
+    }
+    setEmailFormatError(false);
+
+    if (!signupEmailInput.endsWith(allowedDomain)) {
+      setEmailDomainError(true);
+      return;
+    }
+    setEmailDomainError(false);
+
+    await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam);
+  }
 
   const loginUser = async (email: string, password: string, redirectPath: string = '/') => {
     try {
@@ -122,10 +139,10 @@ const AuthPageComponent = () => {
       const userTeam = data.team;
 
       // Store the UUID in a cookie
-      Cookies.set('userId', userId, { expires: 7, path: '' });
-      Cookies.set('displayName', displayName, { expires: 7, path: '' });
-      Cookies.set('email', email, { expires: 7, path: '' });
-      Cookies.set('userTeam', userTeam, { expires: 7, path: '' });
+      Cookies.set('userId', userId, { expires: cookieLifetime, path: '' });
+      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '' });
+      Cookies.set('email', email, { expires: cookieLifetime, path: '' });
+      Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '' });
 
       setUserId(userId);
       setDisplayName(displayName);
@@ -198,21 +215,7 @@ const AuthPageComponent = () => {
           </Radio.Group>
           <Flex justify='flex-end'>
             <Button
-              onClick={async () => {
-                if (!isEmailFormatValid(signupEmailInput)) {
-                  setEmailFormatError(true);
-                  return;
-                }
-                setEmailFormatError(false);
-
-                if (!signupEmailInput.endsWith(allowedDomain)) {
-                  setEmailDomainError(true);
-                  return;
-                }
-                setEmailDomainError(false);
-
-                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam);
-              }}
+              onClick={onClickRegister}
               disabled={
                 !signupDisplayName.trim().length ||
                 !signupEmailInput.trim().length ||
@@ -255,7 +258,10 @@ const AuthPageComponent = () => {
             type='password'
             maxLength={128}
             onFocus={() => setIncorrectPasswordError('')}
-            onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
+            onChange={(event) => {
+              setIncorrectPasswordError('');
+              setLoginPasswordInput(event.currentTarget.value);
+            }}
             onKeyDown={async (event) => {
               if (event.key === 'Enter' && !isInputEmpty) {
                 await loginUser(loginEmailInput, loginPasswordInput, redirectPath)

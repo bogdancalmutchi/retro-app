@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../contexts/UserContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
+import { cookieLifetime } from '../../../utils/LocalStorage';
 
 interface IUserMenuComponentProps {
   email: string;
@@ -54,7 +55,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
 
       // Update cookie
       Cookies.remove('displayName', { path: '/retro-app' });
-      Cookies.set('displayName', newDisplayName, { expires: 7, path: '/retro-app' });
+      Cookies.set('displayName', newDisplayName, { expires: cookieLifetime, path: '/retro-app' });
 
       setDisplayName(newDisplayName);
 
@@ -101,6 +102,11 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
             maxLength={128}
             value={newDisplayName}
             onChange={(event) => setNewDisplayName(event.currentTarget.value)}
+            onKeyDown={async (event) => {
+              if (event.key === 'Enter' && newDisplayName.trim().length) {
+                await onUpdateDisplayName();
+              }
+            }}
           />
           <Flex justify='flex-end'>
             <Button

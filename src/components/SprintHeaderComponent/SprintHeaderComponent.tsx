@@ -83,7 +83,11 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
               /></div>
           }
           error={!newSprintTitle.trim().length && 'Name cannot be empty.'}
-          onKeyDown={(event) => event.key === 'Enter' && handleEdit({ title: newSprintTitle })}
+          onKeyDown={async (event) => {
+            if (event.key === 'Enter' && newSprintTitle.trim().length) {
+              await handleEdit({title: newSprintTitle});
+            }
+          }}
         />
       )
     }

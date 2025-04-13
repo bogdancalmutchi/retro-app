@@ -14,3 +14,5 @@ export const removeItemFromLocalStorage = (item: string, localStorageKey: string
   array = array.filter((i: string) => i !== item);
   localStorage.setItem(localStorageKey, JSON.stringify(array));
 }
+
+export const cookieLifetime = new Date(new Date().getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
