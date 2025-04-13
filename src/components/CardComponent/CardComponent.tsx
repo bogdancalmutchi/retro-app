@@ -33,7 +33,8 @@ const CATEGORY_DISPLAY: Record<string, string> = {
 const CATEGORY_ORDER = ['good', 'bad', 'action'];
 
 const getCategoryCounts = (items: INote[]): Record<string, number> => {
-  return items.reduce((acc, note) => {
+  const publishedItems = items.filter((item) => item.published);
+  return publishedItems.reduce((acc, note) => {
     acc[note.category] = (acc[note.category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
