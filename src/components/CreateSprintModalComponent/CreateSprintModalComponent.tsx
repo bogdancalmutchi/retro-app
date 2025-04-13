@@ -1,28 +1,27 @@
 import * as React from 'react';
-import { Button, Modal, Select, TextInput } from '@mantine/core';
+import { Button, Modal, TextInput } from '@mantine/core';
 import { addDoc, collection } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 import { db } from '../../firebase';
-import { useUser } from '../../contexts/UserContext';
 
 import styles from './CreateSprintModalComponent.module.scss';
 
 interface ICreateSprintModalComponentProps {
   isModalOpen: boolean;
   onClose: () => void;
+  currentSelectedTeam: string;
 }
 
 const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => {
   const {
     isModalOpen,
-    onClose
+    onClose,
+    currentSelectedTeam
   } = props;
 
   const navigate = useNavigate();
-  const { team: currentUserTeam } = useUser();
   const [sprintName, setSprintName] = React.useState<string>('');
-  const [sprintTeam, setSprintTeam] = React.useState<string>(currentUserTeam);
 
   const handleCloseModal = () => {
     onClose();
@@ -34,7 +33,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
       // Create a new sprint document in Firestore
       const docRef = await addDoc(collection(db, 'sprints'), {
         title: sprintName,
-        team: sprintTeam,
+        team: currentSelectedTeam,
         isOpen: true,
         createdAt: new Date(),
       });
@@ -49,23 +48,18 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   return (
     <Modal centered opened={isModalOpen} onClose={handleCloseModal} title='Create Board'>
       <div>
+        <div className={styles.modalInfo}>
+          Create a new sprint board for team <span>{currentSelectedTeam}</span>.
+        </div>
         <div className={styles.modalBodyContainer}>
           <TextInput
             label='Sprint Board Name'
             placeholder='Enter sprint board name'
+            maxLength={128}
             value={sprintName}
             data-autofocus
             onChange={(event) => setSprintName(event.target.value)}
             type='text'
-          />
-          <Select
-            label='Team'
-            placeholder='Pick a team'
-            data={['Protoss', 'Tigers']}
-            searchable
-            checkIconPosition='right'
-            defaultValue={currentUserTeam}
-            onChange={(option) => setSprintTeam(option)}
           />
         </div>
         <div className={styles.buttonContainer}>
@@ -76,7 +70,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
             Cancel
           </Button>
           <Button
-            disabled={!sprintName.trim().length || !sprintTeam}
+            disabled={!sprintName.trim().length}
             onClick={() => onCreateNewSprintBoard()}
           >
             Create

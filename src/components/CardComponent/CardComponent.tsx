@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Box, Button, Flex, Group, Modal, Paper, Text, Tooltip } from '@mantine/core';
+import { Badge, Button, Flex, Group, Modal, Paper, Text, Tooltip } from '@mantine/core';
 import classNames from 'classnames';
 import { IconSquareRoundedX } from '@tabler/icons-react';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -134,13 +134,11 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
           )}
         </Flex>
         <Paper withBorder shadow='md' radius='md' p='xl' className={styles.cardContainer}>
-          <Box w={250}>
-            <Tooltip disabled={!truncated} label={sprint.title}>
-              <Text ref={sprintNameRef} truncate='end' ta='center' fz='lg' fw={500} mt='sm'>
-                {sprint.title}
-              </Text>
-            </Tooltip>
-          </Box>
+          <Tooltip disabled={!truncated} label={sprint.title}>
+            <Text ref={sprintNameRef} truncate='end' ta='center' fz='lg' fw={500} mt='sm'>
+              {sprint.title}
+            </Text>
+          </Tooltip>
           <Flex justify='center' direction='row' gap='xs'>
             <Badge size='xs' variant='light' color={sprint.isOpen ? 'blue' : 'red'}>{sprint.isOpen ? 'Open' : 'Closed'}</Badge>
           </Flex>

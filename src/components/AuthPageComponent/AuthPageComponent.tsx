@@ -12,22 +12,15 @@ import { db } from '../../firebase';
 
 import styles from './AuthPageComponent.module.scss';
 
-interface ILoginPageComponentProps {
-  // Define props here
-}
-
-const AuthPageComponent = (props: ILoginPageComponentProps) => {
-  const {
-
-  } = props;
-
+const AuthPageComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.from?.pathname || '/';
   const { setUserId, setDisplayName, setEmail, setTeam } = useUser();
 
-  const allowedDomain = '@test.com';
+  const allowedDomain = '@intralinks.com';
   const [emailDomainError, setEmailDomainError] = useState(false);
+  const [emailFormatError, setEmailFormatError] = useState(false);
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
   const [signupDisplayName, setSignupDisplayName] = useState('');
@@ -54,6 +47,12 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
     setSignupEmailInput('');
     setSignupPasswordInput('');
     setEmailDomainError(false);
+    setEmailFormatError(false);
+  };
+
+  const isEmailFormatValid = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const registerUser = async (displayName: string, email: string, password: string, team: string) => {
@@ -155,6 +154,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             data-autofocus
             label='Name'
             placeholder='Name'
+            maxLength={128}
             value={signupDisplayName}
             withAsterisk
             onChange={(event) => setSignupDisplayName(event.currentTarget.value)}
@@ -163,7 +163,13 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             label='Email'
             placeholder='e-mail'
             value={signupEmailInput}
-            error={emailDomainError ? 'Email domain not allowed.' : userExistsError}
+            error={
+              emailFormatError
+                ? 'Invalid email format.'
+                : emailDomainError
+                  ? 'Email domain not allowed.'
+                  : userExistsError
+            }
             withAsterisk
             onFocus={() => {
               setEmailDomainError(false);
@@ -176,6 +182,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             placeholder='Password'
             value={signupPasswordInput}
             type='password'
+            maxLength={128}
             withAsterisk
             onChange={(event) => setSignupPasswordInput(event.currentTarget.value)}
           />
@@ -192,12 +199,19 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
           <Flex justify='flex-end'>
             <Button
               onClick={async () => {
+                if (!isEmailFormatValid(signupEmailInput)) {
+                  setEmailFormatError(true);
+                  return;
+                }
+                setEmailFormatError(false);
+
                 if (!signupEmailInput.endsWith(allowedDomain)) {
                   setEmailDomainError(true);
                   return;
                 }
                 setEmailDomainError(false);
-                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam)
+
+                await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam);
               }}
               disabled={
                 !signupDisplayName.trim().length ||
@@ -239,6 +253,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
             value={loginPasswordInput}
             error={incorrectPasswordError}
             type='password'
+            maxLength={128}
             onFocus={() => setIncorrectPasswordError('')}
             onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
             onKeyDown={async (event) => {

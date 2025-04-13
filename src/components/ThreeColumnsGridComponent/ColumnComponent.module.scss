@@ -159,3 +159,14 @@
 .wysiwigNoteText {
   white-space: pre-wrap;
 }
+
+.privateNote {
+  border: 1px dashed black;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.05),
+    rgba(0, 0, 0, 0.05) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}

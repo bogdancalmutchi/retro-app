@@ -317,6 +317,7 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={classNames(styles.itemContainer, {
+                          [styles.privateNote]: !note.published,
                           [styles.goodItemContainer]: note.category === NoteCategory.Good,
                           [styles.badItemContainer]: note.category === NoteCategory.Bad,
                           [styles.actionItemContainer]: note.category === NoteCategory.ActionItem,

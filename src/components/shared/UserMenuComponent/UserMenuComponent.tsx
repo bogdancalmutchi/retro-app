@@ -98,6 +98,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
           <TextInput
             label='Name'
             placeholder='Name'
+            maxLength={128}
             value={newDisplayName}
             onChange={(event) => setNewDisplayName(event.currentTarget.value)}
           />

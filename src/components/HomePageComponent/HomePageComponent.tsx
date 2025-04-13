@@ -56,6 +56,7 @@ const HomePageComponent = () => {
       <CreateSprintModalComponent
         isModalOpen={isCreateSprintModalOpen}
         onClose={() => setIsCreateSprintModalOpen(false)}
+        currentSelectedTeam={selectedTeam}
       />
       <div className={styles.boardContainer}>
         <EmptyCardComponent onCardClick={() => setIsCreateSprintModalOpen(true)} />
