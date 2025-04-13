@@ -24,7 +24,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const storedUserId = Cookies.get('userId') || null;
     const storedDisplayName = Cookies.get('displayName') || null;
     const storedEmail = Cookies.get('email') || null;
-    const storedTeam = Cookies.get('team') || null;
+    const storedTeam = Cookies.get('userTeam') || null;
     setUserId(storedUserId);
     setDisplayName(storedDisplayName);
     setEmail(storedEmail);

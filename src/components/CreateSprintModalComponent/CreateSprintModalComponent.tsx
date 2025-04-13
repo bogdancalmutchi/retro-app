@@ -22,7 +22,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
   const navigate = useNavigate();
   const { team: currentUserTeam } = useUser();
   const [sprintName, setSprintName] = React.useState<string>('');
-  const [sprintTeam, setSprintTeam] = React.useState<string>('');
+  const [sprintTeam, setSprintTeam] = React.useState<string>(currentUserTeam);
 
   const handleCloseModal = () => {
     onClose();

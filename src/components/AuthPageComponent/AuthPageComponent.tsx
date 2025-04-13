@@ -86,7 +86,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
       Cookies.set('userId', userId, { expires: 7, path: '' });
       Cookies.set('displayName', displayName, { expires: 7, path: '' });
       Cookies.set('email', email, { expires: 7, path: '' });
-      Cookies.set('team', team, { expires: 7, path: '' });
+      Cookies.set('userTeam', team, { expires: 7, path: '' });
 
       setUserId(userId);
       setDisplayName(displayName);

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Flex, Group, Modal, Paper, Text, Tooltip } from '@mantine/core';
+import { Badge, Box, Button, Flex, Group, Modal, Paper, Text, Tooltip } from '@mantine/core';
 import classNames from 'classnames';
 import { IconSquareRoundedX } from '@tabler/icons-react';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -44,8 +44,17 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
   const { setSprintId } = useSprint();
   const categoryCounts = getCategoryCounts(sprint.items);
 
+  const sprintNameRef = useRef<HTMLDivElement>(null);
   const [shouldRenderCloseSprintButton, setShouldRenderCloseSprintButton] = React.useState(false);
   const [isCloseSprintModalOpen, setIsCloseSprintModalOpen] = useState(false);
+  const [truncated, setTruncated] = useState(false);
+
+  useEffect(() => {
+    const el = sprintNameRef.current;
+    if (el) {
+      setTruncated(el.scrollWidth > el.clientWidth);
+    }
+  }, [sprint.title]);
 
   const renderedItems = CATEGORY_ORDER.map((category) => {
     const count = categoryCounts[category] || 0;
@@ -125,9 +134,13 @@ const CardComponent = ({ sprint }: ICardComponentProps) => {
           )}
         </Flex>
         <Paper withBorder shadow='md' radius='md' p='xl' className={styles.cardContainer}>
-          <Text ta='center' fz='lg' fw={500} mt='sm'>
-            {sprint.title}
-          </Text>
+          <Box w={250}>
+            <Tooltip disabled={!truncated} label={sprint.title}>
+              <Text ref={sprintNameRef} truncate='end' ta='center' fz='lg' fw={500} mt='sm'>
+                {sprint.title}
+              </Text>
+            </Tooltip>
+          </Box>
           <Flex justify='center' direction='row' gap='xs'>
             <Badge size='xs' variant='light' color={sprint.isOpen ? 'blue' : 'red'}>{sprint.isOpen ? 'Open' : 'Closed'}</Badge>
           </Flex>
