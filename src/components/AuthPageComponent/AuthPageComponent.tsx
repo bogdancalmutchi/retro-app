@@ -26,7 +26,7 @@ const AuthPageComponent = (props: ILoginPageComponentProps) => {
   const redirectPath = location.state?.from?.pathname || '/';
   const { setUserId, setDisplayName, setEmail, setTeam } = useUser();
 
-  const allowedDomain = '@intralinks.com';
+  const allowedDomain = '@test.com';
   const [emailDomainError, setEmailDomainError] = useState(false);
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
