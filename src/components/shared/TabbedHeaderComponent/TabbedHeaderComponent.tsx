@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useUser } from '../../../contexts/UserContext';
 import UserMenuComponent from '../UserMenuComponent/UserMenuComponent';
+import AppLogoComponent from '../AppLogoComponent/AppLogoComponent';
 
 import styles from './TabbedHeaderComponent.module.scss';
 
@@ -28,20 +29,11 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
     <div className={styles.header}>
       <Container size='100%'>
         <div className={styles.headerContainer}>
-          <div className={styles.headerText}>
-            <Avatar
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}
-              radius='md'
-              src='/favicon.svg'
-            />
-            <Text
-              variant='gradient'
-              gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
-            >
-              SprintEcho
-            </Text>
-          </div>
+          <AppLogoComponent
+            className={styles.headerText}
+            onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}
+            style={{ cursor: 'pointer' }}
+          />
           <UserMenuComponent email={email} displayName={displayName} userId={userId} />
         </div>
         {isHomePage && (

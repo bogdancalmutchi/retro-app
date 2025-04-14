@@ -2,13 +2,6 @@
   width: 460px;
 }
 
-.headerText {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.logoContainer {
   margin-bottom: 32px;
-  & > p {
-    font-size: 32px;
-    font-weight: bold;
-  }
 }

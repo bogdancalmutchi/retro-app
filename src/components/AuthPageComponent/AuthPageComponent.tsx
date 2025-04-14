@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '../../contexts/UserContext';
 import { db } from '../../firebase';
 import { cookieLifetime } from '../../utils/LocalStorage';
+import AppLogoComponent from '../shared/AppLogoComponent/AppLogoComponent';
 
 import styles from './AuthPageComponent.module.scss';
 
@@ -281,25 +282,11 @@ const AuthPageComponent = () => {
     );
   };
 
-  const renderLogo = () => {
-    return (
-      <div className={styles.headerText}>
-        <Avatar radius='md' src='/favicon.svg'/>
-        <Text
-          variant='gradient'
-          gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
-        >
-          SprintEcho
-        </Text>
-      </div>
-    );
-  };
-
   const renderAuthPage = () => {
     return (
       <Center h='50vh'>
         <Paper withBorder shadow='md' radius='md' p='xl' className={styles.authCard}>
-          {renderLogo()}
+          <AppLogoComponent className={styles.logoContainer} />
           <Group justify='center' align='center' gap={20}>
             <Button
               variant='gradient'

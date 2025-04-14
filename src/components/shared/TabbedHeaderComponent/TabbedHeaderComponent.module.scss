@@ -41,12 +41,5 @@
 }
 
 .headerText {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 0;
-  & > p {
-    font-size: 32px;
-    font-weight: bold;
-  }
+  padding: 12px 0 24px 0;
 }
