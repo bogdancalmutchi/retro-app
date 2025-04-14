@@ -5,6 +5,6 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   define: {
-    'process.env': {} // This might help resolve some issues
+    'process.env': {}
   }
 })
