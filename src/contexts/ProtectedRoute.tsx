@@ -39,7 +39,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [navigate, location]);
 
   if (loading) {
-    return null; // Optionally, you can display a loading spinner here
+    return null;
   }
 
   return <>{children}</>; // Render the children (protected content) if logged in
