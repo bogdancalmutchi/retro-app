@@ -53,7 +53,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
         displayName: newDisplayName,
       });
 
-      // Update cookie
+      // Update cookies
       Cookies.remove('displayName', { path: '/' });
       Cookies.set('displayName', newDisplayName, { expires: cookieLifetime, path: '/' });
 
