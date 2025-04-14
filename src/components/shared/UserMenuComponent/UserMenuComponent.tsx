@@ -32,10 +32,10 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
   const onLogout = () => {
-    Cookies.remove('userId', { path: '/retro-app' });
-    Cookies.remove('displayName', { path: '/retro-app' });
-    Cookies.remove('email', { path: '/retro-app' });
-    Cookies.remove('userTeam', { path: '/retro-app' });
+    Cookies.remove('userId', { path: '/' });
+    Cookies.remove('displayName', { path: '/' });
+    Cookies.remove('email', { path: '/' });
+    Cookies.remove('userTeam', { path: '/' });
 
     setUserId(null);
     setDisplayName(null);
@@ -54,8 +54,8 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
       });
 
       // Update cookie
-      Cookies.remove('displayName', { path: '/retro-app' });
-      Cookies.set('displayName', newDisplayName, { expires: cookieLifetime, path: '/retro-app' });
+      Cookies.remove('displayName', { path: '/' });
+      Cookies.set('displayName', newDisplayName, { expires: cookieLifetime, path: '/' });
 
       setDisplayName(newDisplayName);
 

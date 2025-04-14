@@ -33,7 +33,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
               style={{ cursor: 'pointer' }}
               onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}
               radius='md'
-              src='/retro-app/favicon.svg'
+              src='/favicon.svg'
             />
             <Text
               variant='gradient'

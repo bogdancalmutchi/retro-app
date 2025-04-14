@@ -5,10 +5,10 @@ import Cookies from 'js-cookie';
 import { cookieLifetime } from '../utils/LocalStorage';
 
 const refreshCookies = (cookieExpiration: Date) => {
-  Cookies.set('userId', Cookies.get('userId') ?? '', { expires: cookieExpiration, path: '' });
-  Cookies.set('displayName', Cookies.get('displayName') ?? '', { expires: cookieExpiration, path: '' });
-  Cookies.set('email', Cookies.get('email') ?? '', { expires: cookieExpiration, path: '' });
-  Cookies.set('userTeam', Cookies.get('userTeam') ?? '', { expires: cookieExpiration, path: '' });
+  Cookies.set('userId', Cookies.get('userId') ?? '', { expires: cookieExpiration, path: '/' });
+  Cookies.set('displayName', Cookies.get('displayName') ?? '', { expires: cookieExpiration, path: '/' });
+  Cookies.set('email', Cookies.get('email') ?? '', { expires: cookieExpiration, path: '/' });
+  Cookies.set('userTeam', Cookies.get('userTeam') ?? '', { expires: cookieExpiration, path: '/' });
 };
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

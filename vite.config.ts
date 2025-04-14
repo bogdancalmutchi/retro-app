@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/retro-app/',
+  base: '/',
   define: {
     'process.env': {} // This might help resolve some issues
   }

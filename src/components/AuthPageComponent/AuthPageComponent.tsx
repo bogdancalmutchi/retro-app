@@ -83,10 +83,10 @@ const AuthPageComponent = () => {
         passwordHash: hashedPassword
       });
 
-      Cookies.set('userId', userId, { expires: cookieLifetime, path: '' });
-      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '' });
-      Cookies.set('email', email, { expires: cookieLifetime, path: '' });
-      Cookies.set('userTeam', team, { expires: cookieLifetime, path: '' });
+      Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
+      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
+      Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
+      Cookies.set('userTeam', team, { expires: cookieLifetime, path: '/' });
 
       setUserId(userId);
       setDisplayName(displayName);
@@ -139,10 +139,10 @@ const AuthPageComponent = () => {
       const userTeam = data.team;
 
       // Store the UUID in a cookie
-      Cookies.set('userId', userId, { expires: cookieLifetime, path: '' });
-      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '' });
-      Cookies.set('email', email, { expires: cookieLifetime, path: '' });
-      Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '' });
+      Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
+      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
+      Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
+      Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '/' });
 
       setUserId(userId);
       setDisplayName(displayName);
@@ -284,7 +284,7 @@ const AuthPageComponent = () => {
   const renderLogo = () => {
     return (
       <div className={styles.headerText}>
-        <Avatar radius='md' src='/retro-app/favicon.svg'/>
+        <Avatar radius='md' src='/favicon.svg'/>
         <Text
           variant='gradient'
           gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}

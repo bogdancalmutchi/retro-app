@@ -14,7 +14,7 @@ const EmptyCardComponent = (props: IEmptyCardComponentProps) => {
 
   return (
     <Paper onClick={onCardClick} withBorder shadow='md' radius='md' p='xl' className={styles.emptyCardContainer}>
-      <Image src='/retro-app/plus.svg' />
+      <Image src='/plus.svg' />
     </Paper>
   );
 };
