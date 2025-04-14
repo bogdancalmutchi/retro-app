@@ -68,7 +68,7 @@ const NotFoundRedirect = () => {
     }
   }, [navigate, userId]);
 
-  return null; // This component doesn't render anything directly
+  return null;
 };
 
 export default App;
