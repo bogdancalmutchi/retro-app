@@ -289,7 +289,7 @@ const AuthPageComponent = () => {
           variant='gradient'
           gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
         >
-          ProtoTigers Retro App
+          SprintEcho
         </Text>
       </div>
     );

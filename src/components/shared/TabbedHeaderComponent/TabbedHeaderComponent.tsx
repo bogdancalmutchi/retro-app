@@ -39,7 +39,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
               variant='gradient'
               gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
             >
-              ProtoTigers Retro App
+              SprintEcho
             </Text>
           </div>
           <UserMenuComponent email={email} displayName={displayName} userId={userId} />
