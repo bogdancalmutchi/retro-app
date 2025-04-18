@@ -1,0 +1,22 @@
+.logoContainer {
+  display: flex;
+  align-items: center;
+  margin-left: 23%;
+  gap: 16px;
+  min-height: 50px;
+  min-width: 395px;
+}
+
+.logoTextContainer {
+  display: flex;
+  align-items: baseline;
+}
+
+.logoTextPartOne {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.logoTextPartTwo {
+  font-size: 28px;
+}

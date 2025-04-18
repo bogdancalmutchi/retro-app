@@ -4,13 +4,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
 import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
-import { Avatar, Button, Center, Flex, Group, Modal, Paper, Radio, Text, TextInput } from '@mantine/core';
+import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useUser } from '../../contexts/UserContext';
 import { db } from '../../firebase';
 import { cookieLifetime } from '../../utils/LocalStorage';
-import AppLogoComponent from '../shared/AppLogoComponent/AppLogoComponent';
+import LowPolyBackgroundComponent from '../shared/LowPolyBackgroundComponent/LowPolyBackgroundComponent';
+import AnimatedAppLogoComponent from '../shared/AppLogoComponent/AnimatedAppLogoComponent';
 
 import styles from './AuthPageComponent.module.scss';
 
@@ -286,7 +287,7 @@ const AuthPageComponent = () => {
     return (
       <Center h='50vh'>
         <Paper withBorder shadow='md' radius='md' p='xl' className={styles.authCard}>
-          <AppLogoComponent className={styles.logoContainer} />
+          <AnimatedAppLogoComponent className={styles.logoContainer} />
           <Group justify='center' align='center' gap={20}>
             <Button
               variant='gradient'
@@ -310,6 +311,7 @@ const AuthPageComponent = () => {
 
   return (
     <>
+      <LowPolyBackgroundComponent />
       {isSignupModalRendered && renderSignupModal()}
       {isLoginModalRendered && renderLoginModal()}
       {renderAuthPage()}
