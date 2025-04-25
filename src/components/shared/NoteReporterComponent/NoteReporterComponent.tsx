@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { Avatar, Flex } from '@mantine/core';
 
 import { db } from '../../../firebase';
@@ -11,22 +11,20 @@ const NoteReporterComponent = ({ userId }: { userId: string }) => {
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
+    const userRef = doc(db, 'users', userId);
+
+    const unsubscribe = onSnapshot(userRef, (userSnap) => {
         if (userSnap.exists()) {
           setDisplayName(userSnap.data().displayName);
         } else {
           setDisplayName('Unknown user');
         }
-      } catch (err) {
-        console.error('Failed to fetch user', err);
+    }, (error) => {
+      console.error('Failed to fetch user', error);
         setDisplayName('Error');
-      }
-    };
+    });
 
-    fetchUser();
+    return () => unsubscribe();
   }, [userId]);
 
   return <div className={styles.reporterContainer}>

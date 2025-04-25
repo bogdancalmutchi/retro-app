@@ -60,7 +60,6 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
       setDisplayName(newDisplayName);
 
       setIsEditUserModalOpen(false);
-      window.location.reload();
     } catch (error) {
       console.error('Failed to update display name:', error);
     }
