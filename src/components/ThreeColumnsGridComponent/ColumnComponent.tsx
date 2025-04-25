@@ -115,6 +115,11 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     } else if (isNoteAlreadyLiked) {
       handleEdit(note.id, { likes: note.likes - 1 });
       removeItemFromLocalStorage(note.id, 'liked');
+    } else if (isNoteAlreadyDisliked) {
+      handleEdit(note.id, { likes: note.likes + 1 });
+      handleEdit(note.id, { dislikes: note.dislikes - 1 });
+      removeItemFromLocalStorage(note.id, 'disliked');
+      addItemToLocalStorage(note.id, 'liked');
     }
     return null;
   };
@@ -128,6 +133,11 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     } else if (isNoteAlreadyDisliked) {
       handleEdit(note.id, { dislikes: note.dislikes - 1 });
       removeItemFromLocalStorage(note.id, 'disliked');
+    } else if (isNoteAlreadyLiked) {
+      handleEdit(note.id, { likes: note.likes - 1 });
+      handleEdit(note.id, { dislikes: note.dislikes + 1 });
+      removeItemFromLocalStorage(note.id, 'liked');
+      addItemToLocalStorage(note.id, 'disliked');
     }
     return null;
   };
