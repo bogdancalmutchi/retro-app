@@ -50,7 +50,6 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     return () => unsub();
   }, [sprintId]);
 
-
   const renderBackToHomeButton = () => (
     <div className={styles.backButtonContainer} onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}>
       <IconArrowNarrowLeft size={14} />

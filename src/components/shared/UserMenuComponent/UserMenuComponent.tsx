@@ -7,7 +7,7 @@ import {
 } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 import { useUser } from '../../../contexts/UserContext';
 import { useSprint } from '../../../contexts/SprintContext';
@@ -124,18 +124,25 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     );
   };
 
-  const triggerGlobalCelebration = async (sprintId: string, durationMs = 3000) => {
-    const sprintRef = doc(db, 'sprints', sprintId);
+  const triggerGlobalCelebration = async (sprintId: string) => {
+    if (canParty && sprintId) {
+      const sprintRef = doc(db, 'sprints', sprintId);
+      const sprintDoc = await getDoc(sprintRef);
 
-    try {
-      await updateDoc(sprintRef, { celebrating: true });
+      if (sprintDoc.exists() && sprintDoc.data().celebrating) {
+        return; // Prevent the celebration if it's already in progress
+      }
 
-      // After a timeout, set celebrating back to false
-      setTimeout(async () => {
-        await updateDoc(sprintRef, { celebrating: false });
-      }, durationMs);
-    } catch (error) {
-      console.error('Error celebrating sprint:', error);
+      try {
+        await updateDoc(sprintRef, { celebrating: true });
+
+        // After a timeout, set celebrating back to false
+        setTimeout(async () => {
+          await updateDoc(sprintRef, { celebrating: false });
+        }, 10000);
+      } catch (error) {
+        console.error('Error celebrating sprint:', error);
+      }
     }
   };
 
@@ -150,7 +157,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
       <div style={{ position: 'relative', width: 'fit-content' }}>
         <Avatar
           src={`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${encodeURIComponent(userId)}&backgroundColor=F2D3B1`}
-          onClick={() => (canParty && sprintId) ? triggerGlobalCelebration(sprintId) : null}
+          onClick={() => triggerGlobalCelebration(sprintId)}
         />
         {canParty && (
           <div className={styles.confettiOverlay}>
