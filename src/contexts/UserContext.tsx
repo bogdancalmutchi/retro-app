@@ -6,10 +6,12 @@ interface UserContextType {
   displayName: string | null;
   email: string | null;
   team: string | null;
+  canParty: boolean;
   setUserId: (id: string | null) => void;
   setDisplayName: (name: string | null) => void;
   setEmail: (email: string | null) => void;
   setTeam: (team: string | null) => void;
+  setCanParty: (canParty: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -19,20 +21,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [team, setTeam] = useState<string | null>(null);
+  const [canParty, setCanParty] = useState<boolean>(false);
 
   useEffect(() => {
     const storedUserId = Cookies.get('userId') || null;
     const storedDisplayName = Cookies.get('displayName') || null;
     const storedEmail = Cookies.get('email') || null;
     const storedTeam = Cookies.get('userTeam') || null;
+    const storedCanParty = Cookies.get('canParty') === 'true';
     setUserId(storedUserId);
     setDisplayName(storedDisplayName);
     setEmail(storedEmail);
     setTeam(storedTeam);
+    setCanParty(storedCanParty);
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, displayName, email, team, setUserId, setDisplayName, setEmail, setTeam }}>
+    <UserContext.Provider value={{ userId, displayName, email, team, canParty, setUserId, setDisplayName, setEmail, setTeam, setCanParty }}>
       {children}
     </UserContext.Provider>
   );

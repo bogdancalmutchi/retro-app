@@ -19,7 +19,7 @@ const AuthPageComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.from?.pathname || '/';
-  const { setUserId, setDisplayName, setEmail, setTeam } = useUser();
+  const { setUserId, setDisplayName, setEmail, setTeam, setCanParty } = useUser();
 
   const allowedDomain = '@intralinks.com';
   const [emailDomainError, setEmailDomainError] = useState(false);
@@ -60,14 +60,14 @@ const AuthPageComponent = () => {
 
   const registerUser = async (displayName: string, email: string, password: string, team: string) => {
     try {
-    const userId = uuidv4();
+      const userId = uuidv4();
 
-    // Check if email already exists
-    const usersRef = collection(db, 'users');
-    const snapshot = await getDocs(usersRef);
-    const existing = snapshot.docs.find(doc => doc.data().email === email);
+      // Check if email already exists
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const existing = snapshot.docs.find(doc => doc.data().email === email);
 
-    if (existing) {
+      if (existing) {
         console.error('User with this email already exists.');
         setUserExistsError('User with this email already exists.');
         return;
@@ -75,12 +75,13 @@ const AuthPageComponent = () => {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Store user using UUID as doc ID
-    const userRef = doc(db, 'users', userId);
+      // Store user using UUID as doc ID
+      const userRef = doc(db, 'users', userId);
       await setDoc(userRef, {
         email,
         displayName,
         team,
+        canParty: false,
         id: userId,
         passwordHash: hashedPassword
       });
@@ -89,11 +90,13 @@ const AuthPageComponent = () => {
       Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
       Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
       Cookies.set('userTeam', team, { expires: cookieLifetime, path: '/' });
+      Cookies.set('canParty', team, { expires: cookieLifetime, path: '/' });
 
       setUserId(userId);
       setDisplayName(displayName);
       setEmail(email);
       setTeam(team);
+      setCanParty(false);
 
       navigate(`/?team=${encodeURIComponent(team)}`);
     } catch (error) {
@@ -139,17 +142,20 @@ const AuthPageComponent = () => {
       const userId = userDoc.id;
       const displayName = data.displayName;
       const userTeam = data.team;
+      const canParty = data.canParty;
 
       // Store the UUID in a cookie
       Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
       Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
       Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
       Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '/' });
+      Cookies.set('canParty', canParty, { expires: cookieLifetime, path: '/' });
 
       setUserId(userId);
       setDisplayName(displayName);
       setEmail(email);
       setTeam(userTeam);
+      setCanParty(canParty);
 
       setIncorrectEmailError(null);
       setIncorrectPasswordError(null);

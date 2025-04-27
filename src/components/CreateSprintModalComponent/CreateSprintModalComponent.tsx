@@ -36,6 +36,7 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
         team: currentSelectedTeam,
         isOpen: true,
         createdAt: new Date(),
+        celebrating: false
       });
 
       // Redirect to the new sprint page

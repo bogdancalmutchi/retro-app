@@ -7,11 +7,14 @@ import {
 } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { doc, updateDoc } from 'firebase/firestore';
 
 import { useUser } from '../../../contexts/UserContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useSprint } from '../../../contexts/SprintContext';
 import { db } from '../../../firebase';
 import { cookieLifetime } from '../../../utils/LocalStorage';
+
+import styles from './UserMenuComponent.module.scss';
 
 interface IUserMenuComponentProps {
   email: string;
@@ -27,7 +30,8 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   } = props;
 
   const navigate = useNavigate();
-  const { setUserId, setDisplayName, setEmail } = useUser();
+  const { canParty, setUserId, setDisplayName, setEmail } = useUser();
+  const { sprintId } = useSprint();
   const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
@@ -36,6 +40,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     Cookies.remove('displayName', { path: '/' });
     Cookies.remove('email', { path: '/' });
     Cookies.remove('userTeam', { path: '/' });
+    Cookies.remove('canParty', { path: '/' });
 
     setUserId(null);
     setDisplayName(null);
@@ -69,7 +74,6 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     return (
       <UnstyledButton>
         <Group>
-          <Avatar src={`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${encodeURIComponent(userId)}&backgroundColor=F2D3B1`}/>
           <div style={{ flex: 1 }}>
             <Text size='sm' fw={500}>
               {displayName}
@@ -120,10 +124,58 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
     );
   };
 
+  const triggerGlobalCelebration = async (sprintId: string, durationMs = 3000) => {
+    const sprintRef = doc(db, 'sprints', sprintId);
+
+    try {
+      await updateDoc(sprintRef, { celebrating: true });
+
+      // After a timeout, set celebrating back to false
+      setTimeout(async () => {
+        await updateDoc(sprintRef, { celebrating: false });
+      }, durationMs);
+    } catch (error) {
+      console.error('Error celebrating sprint:', error);
+    }
+  };
+
+  const getRandomShape = () => {
+    const shapes = ['circle', 'square', 'triangle'];
+    return shapes[Math.floor(Math.random() * shapes.length)];
+  };
+
+  const renderAvatar = () => {
+    const confettiCount = 10;
+    return (
+      <div style={{ position: 'relative', width: 'fit-content' }}>
+        <Avatar
+          src={`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${encodeURIComponent(userId)}&backgroundColor=F2D3B1`}
+          onClick={() => (canParty && sprintId) ? triggerGlobalCelebration(sprintId) : null}
+        />
+        {canParty && (
+          <div className={styles.confettiOverlay}>
+            {[...Array(confettiCount)].map((_, index) => (
+              <div
+                key={index}
+                className={`${styles.confettiPiece} ${styles[getRandomShape()]}`}
+                style={{
+                  left: `${Math.random() * 100}%`, // Random horizontal position
+                  animationDuration: `${Math.random() * 2 + 2}s`, // Random animation duration
+                  animationDelay: `${index * 2}s, 10s`
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       {isEditUserModalOpen && renderEditUserModal()}
-      <div>
+      <div className={styles.menuContainer}>
+        {renderAvatar()}
         <Menu shadow='md' width={200}>
           <Menu.Target>
             {userButton()}

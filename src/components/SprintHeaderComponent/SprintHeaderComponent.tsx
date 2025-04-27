@@ -8,11 +8,12 @@ import {
 import classNames from 'classnames';
 import { Badge, Flex, Text, TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
 import { useUser } from '../../contexts/UserContext';
+import { fireConfettiRain } from '../shared/ConfettiCanvas/ConfettiCanvas';
 
 import styles from './SprintHeaderComponent.module.scss';
 
@@ -36,6 +37,19 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
       setNewSprintTitle(sprintTitle);
     }
   }, [inEditMode, sprintTitle]);
+
+  useEffect(() => {
+    if (!sprintId) return;
+
+    const unsub = onSnapshot(doc(db, 'sprints', sprintId), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().celebrating) {
+        fireConfettiRain();
+      }
+    });
+
+    return () => unsub();
+  }, [sprintId]);
+
 
   const renderBackToHomeButton = () => (
     <div className={styles.backButtonContainer} onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}>

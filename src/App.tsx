@@ -1,7 +1,9 @@
 import React from 'react';
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 import Cookies from 'js-cookie';
 
 import { SprintProvider } from './contexts/SprintContext';
@@ -11,12 +13,15 @@ import AuthPageComponent from './components/AuthPageComponent/AuthPageComponent'
 import ProtectedRoute from './contexts/ProtectedRoute';
 import { UserProvider } from './contexts/UserContext';
 import GlobalHeaderWrapper from './components/wrappers/GlobalHeaderWrapper/GlobalHeaderWrapper';
+import ConfettiCanvas from './components/shared/ConfettiCanvas/ConfettiCanvas';
 
 const App = () => {
   return (
     <MantineProvider defaultColorScheme='light'>
+      <Notifications />
       <UserProvider>
         <SprintProvider>
+          <ConfettiCanvas />
           <HashRouter>
             <Routes>
               {/* No protection needed for the login page */}
