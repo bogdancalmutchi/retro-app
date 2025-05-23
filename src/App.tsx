@@ -14,6 +14,7 @@ import ProtectedRoute from './contexts/ProtectedRoute';
 import { UserProvider } from './contexts/UserContext';
 import GlobalHeaderWrapper from './components/wrappers/GlobalHeaderWrapper/GlobalHeaderWrapper';
 import ConfettiCanvas from './components/shared/ConfettiCanvas/ConfettiCanvas';
+import AdminPageComponent from './components/AdminPageComponent/AdminPageComponent';
 
 const App = () => {
   return (
@@ -44,6 +45,16 @@ const App = () => {
                   <ProtectedRoute>
                     <GlobalHeaderWrapper>
                       <SprintBoardComponent />
+                    </GlobalHeaderWrapper>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <GlobalHeaderWrapper>
+                      <AdminPageComponent />
                     </GlobalHeaderWrapper>
                   </ProtectedRoute>
                 }

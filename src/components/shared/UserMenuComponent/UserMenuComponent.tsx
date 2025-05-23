@@ -4,6 +4,7 @@ import {
   IconChevronRight,
   IconUserEdit,
   IconLogout,
+  IconClipboard,
 } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +31,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   } = props;
 
   const navigate = useNavigate();
-  const { canParty, setUserId, setDisplayName, setEmail } = useUser();
+  const { canParty, setUserId, setDisplayName, setEmail, isAdmin } = useUser();
   const { sprintId } = useSprint();
   const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
@@ -135,11 +136,8 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
 
       try {
         await updateDoc(sprintRef, { celebrating: true });
-
-        // After a timeout, set celebrating back to false
-        setTimeout(async () => {
-          await updateDoc(sprintRef, { celebrating: false });
-        }, 10000);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        await updateDoc(sprintRef, { celebrating: false });
       } catch (error) {
         console.error('Error celebrating sprint:', error);
       }
@@ -188,6 +186,14 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
             {userButton()}
           </Menu.Target>
           <Menu.Dropdown>
+            {isAdmin && (
+              <>
+                <Menu.Item onClick={() => navigate('/admin')} leftSection={<IconClipboard size={14}/>}>
+                  Admin Panel
+                </Menu.Item>
+                <Menu.Divider />
+              </>
+              )}
             <Menu.Item onClick={() => setIsEditUserModalOpen(true)} leftSection={<IconUserEdit size={14} />}>
               Change Name
             </Menu.Item>

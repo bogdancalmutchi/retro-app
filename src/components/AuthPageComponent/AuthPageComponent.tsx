@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, DocumentData, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,8 +18,8 @@ import styles from './AuthPageComponent.module.scss';
 const AuthPageComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectPath = location.state?.from?.pathname || '/';
-  const { setUserId, setDisplayName, setEmail, setTeam, setCanParty } = useUser();
+  const redirectPath = location.state?.from?.pathname + location.state?.from?.search || '/';
+  const { setUserId, setDisplayName, setEmail, setTeam, setCanParty, setIsAdmin, setHasTempPassword } = useUser();
 
   const allowedDomain = '@intralinks.com';
   const [emailDomainError, setEmailDomainError] = useState(false);
@@ -32,8 +32,12 @@ const AuthPageComponent = () => {
   const [loginPasswordInput, setLoginPasswordInput] = useState('');
   const [isSignupModalRendered, setIsSignupModalRendered] = useState(false);
   const [isLoginModalRendered, setIsLoginModalRendered] = useState(false);
+  const [isResetPasswordModalRendered, setIsResetPasswordModalRendered] = useState(false);
+  const [resetPasswordConfirmPassInput, setResetPasswordConfirmPassInput] = useState('');
+  const [resetPasswordNewPassInput, setResetPasswordNewPassInput] = useState('');
   const [incorrectEmailError, setIncorrectEmailError] = useState('');
   const [incorrectPasswordError, setIncorrectPasswordError] = useState('');
+  const [notMatchingPasswordError, setNotMatchingPasswordError] = useState('');
   const [userExistsError, setUserExistsError] = useState('');
 
   const resetLoginModalState = () => {
@@ -83,7 +87,9 @@ const AuthPageComponent = () => {
         team,
         canParty: false,
         id: userId,
-        passwordHash: hashedPassword
+        passwordHash: hashedPassword,
+        hasTempPassword: false,
+        isAdmin: false
       });
 
       Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
@@ -104,6 +110,42 @@ const AuthPageComponent = () => {
     }
   };
 
+  const getUsersData = async (email: string) => {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    const userDoc = snapshot.docs.find(doc => doc.data().email === email);
+
+    if (!userDoc) {
+      setIncorrectEmailError('User not found');
+      return;
+    }
+
+    return userDoc.data();
+  }
+
+  const setUserData = (data: DocumentData) => {
+    const userId = data.id;
+    const displayName = data.displayName;
+    const userTeam = data.team;
+    const canParty = data.canParty;
+    const isAdmin = data.isAdmin;
+    const email = data.email;
+
+    // Store the UUID in a cookie
+    Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
+    Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
+    Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
+    Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '/' });
+    Cookies.set('canParty', canParty, { expires: cookieLifetime, path: '/' });
+
+    setUserId(userId);
+    setDisplayName(displayName);
+    setEmail(email);
+    setTeam(userTeam);
+    setCanParty(canParty);
+    setIsAdmin(isAdmin);
+  }
+
   const onClickRegister = async () => {
     if (!isEmailFormatValid(signupEmailInput)) {
       setEmailFormatError(true);
@@ -122,16 +164,7 @@ const AuthPageComponent = () => {
 
   const loginUser = async (email: string, password: string, redirectPath: string = '/') => {
     try {
-      const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
-      const userDoc = snapshot.docs.find(doc => doc.data().email === email);
-
-      if (!userDoc) {
-        setIncorrectEmailError('User not found');
-        return;
-      }
-
-      const data = userDoc.data();
+      const data = await getUsersData(email);
       const isPasswordValid = await bcrypt.compare(password, data.passwordHash);
 
       if (!isPasswordValid) {
@@ -139,32 +172,46 @@ const AuthPageComponent = () => {
         return;
       }
 
-      const userId = userDoc.id;
-      const displayName = data.displayName;
-      const userTeam = data.team;
-      const canParty = data.canParty;
+      if (data.hasTempPassword) {
+        setIsLoginModalRendered(false);
+        setIsResetPasswordModalRendered(true);
+        return;
+      }
 
-      // Store the UUID in a cookie
-      Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
-      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
-      Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
-      Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '/' });
-      Cookies.set('canParty', canParty, { expires: cookieLifetime, path: '/' });
-
-      setUserId(userId);
-      setDisplayName(displayName);
-      setEmail(email);
-      setTeam(userTeam);
-      setCanParty(canParty);
+      setUserData(data);
 
       setIncorrectEmailError(null);
       setIncorrectPasswordError(null);
 
-      navigate(`/?team=${encodeURIComponent(userTeam)}`);
+      const url = new URL(window.location.origin + redirectPath);
+      url.searchParams.set('team', data.team);
+      navigate(url.pathname + url.search);
     } catch (error) {
       console.error('Error logging in user:', error);
     }
   };
+
+  const loginUserAfterPassReset = async (email: string, confirmPassword: string, newPassword: string) => {
+    const data = await getUsersData(email);
+    const userRef = doc(db, 'users', data.id);
+    const isNewPasswordMatching = confirmPassword === newPassword;
+
+    if (data.hasTempPassword && !isNewPasswordMatching) {
+      setNotMatchingPasswordError('Passwords do not match');
+      return;
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    await updateDoc(userRef, {
+      hasTempPassword: false,
+      passwordHash: newPasswordHash
+    });
+
+    setUserData(data);
+    setHasTempPassword(false);
+    navigate(`/?team=${encodeURIComponent(data.team)}`);
+  }
 
   const renderSignupModal = () => {
     return (
@@ -289,6 +336,56 @@ const AuthPageComponent = () => {
     );
   };
 
+  const renderResetPasswordModal = () => {
+    const isInputEmpty = !resetPasswordConfirmPassInput.trim().length || !resetPasswordNewPassInput.trim().length;
+    return (
+      <Modal
+        centered
+        title='Reset Password'
+        opened={isResetPasswordModalRendered}
+        onClose={resetLoginModalState}
+      >
+        <Flex direction='column' gap='md'>
+          <TextInput
+            data-autofocus
+            label='New Password'
+            placeholder='New Password'
+            value={resetPasswordNewPassInput}
+            error={notMatchingPasswordError}
+            type='password'
+            maxLength={128}
+            withAsterisk
+            onFocus={() => setNotMatchingPasswordError('')}
+            onChange={(event) => setResetPasswordNewPassInput(event.currentTarget.value)}
+          />
+          <TextInput
+            label='Confirm Password'
+            placeholder='Confirm Password'
+            type='password'
+            value={resetPasswordConfirmPassInput}
+            error={notMatchingPasswordError}
+            withAsterisk
+            onFocus={() => setNotMatchingPasswordError('')}
+            onChange={(event) => setResetPasswordConfirmPassInput(event.currentTarget.value)}
+            onKeyDown={async (event) => {
+              if (event.key === 'Enter' && !isInputEmpty) {
+                await loginUserAfterPassReset(loginEmailInput, resetPasswordConfirmPassInput, resetPasswordNewPassInput)
+              }
+            }}
+          />
+          <Flex justify='flex-end'>
+            <Button
+              onClick={() => loginUserAfterPassReset(loginEmailInput, resetPasswordConfirmPassInput, resetPasswordNewPassInput)}
+              disabled={isInputEmpty}
+            >
+              Login
+            </Button>
+          </Flex>
+        </Flex>
+      </Modal>
+    );
+  }
+
   const renderAuthPage = () => {
     return (
       <Center h='50vh'>
@@ -320,6 +417,7 @@ const AuthPageComponent = () => {
       <LowPolyBackgroundComponent />
       {isSignupModalRendered && renderSignupModal()}
       {isLoginModalRendered && renderLoginModal()}
+      {isResetPasswordModalRendered && renderResetPasswordModal()}
       {renderAuthPage()}
     </>
   );
