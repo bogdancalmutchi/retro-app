@@ -21,6 +21,7 @@
     "canvas-confetti": "^1.9.3",
     "classnames": "^2.5.1",
     "firebase": "^11.5.0",
+    "firebase-tools": "^14.4.0",
     "i": "^0.3.7",
     "js-cookie": "^3.0.5",
     "npm": "^11.2.0",

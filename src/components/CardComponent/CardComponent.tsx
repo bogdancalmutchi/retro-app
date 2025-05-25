@@ -18,6 +18,7 @@ export interface ISprint {
   team: string;
   isOpen: boolean;
   items: INote[];
+  summary: string;
 }
 
 interface ICardComponentProps {

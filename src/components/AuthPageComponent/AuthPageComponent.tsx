@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
 import Cookies from 'js-cookie';
 import { collection, doc, DocumentData, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -153,7 +154,7 @@ const AuthPageComponent = () => {
     }
     setEmailFormatError(false);
 
-    if (!signupEmailInput.endsWith(allowedDomain)) {
+    if (!signupEmailInput.endsWith(allowedDomain) || !signupEmailInput.endsWith('@admin.com')) {
       setEmailDomainError(true);
       return;
     }
@@ -161,6 +162,63 @@ const AuthPageComponent = () => {
 
     await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam);
   }
+
+  const registerWithFirebase = async () => {
+    const auth = getAuth();
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, signupEmailInput, signupPasswordInput);
+      const user = userCredential.user;
+
+      const userId = uuidv4();
+      const userRef = doc(db, 'users', userId);
+
+      const userData = {
+        email: user.email,
+        displayName: signupDisplayName,
+        team: signupTeam,
+        canParty: true,
+        id: userId,
+        hasTempPassword: false,
+        isAdmin: true
+      };
+
+      await setDoc(userRef, userData);
+
+      setUserData(userData);
+
+      navigate(`/?team=${encodeURIComponent(signupTeam)}`);
+    } catch (error) {
+      console.error('Firebase registration error:', error);
+      setUserExistsError(error.message);
+    }
+  };
+
+  const signInWithFirebase = async () => {
+    const auth = getAuth();
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, loginEmailInput, loginPasswordInput);
+      const user = userCredential.user;
+
+      // Get matching user from Firestore
+      const data = await getUsersData(user.email || '');
+      if (!data) {
+        setIncorrectEmailError('User not found in Firestore');
+        return;
+      }
+
+      // Set cookies and context
+      setUserData(data);
+
+      const url = new URL(window.location.origin + redirectPath);
+      url.searchParams.set('team', data.team);
+      navigate(url.pathname + url.search);
+    } catch (error) {
+      console.error('Firebase login error:', error);
+      setIncorrectPasswordError('Incorrect email or password');
+    }
+  };
 
   const loginUser = async (email: string, password: string, redirectPath: string = '/') => {
     try {
@@ -270,7 +328,7 @@ const AuthPageComponent = () => {
           </Radio.Group>
           <Flex justify='flex-end'>
             <Button
-              onClick={onClickRegister}
+              onClick={() => signupEmailInput.endsWith('@admin.com') ? registerWithFirebase() : onClickRegister()}
               disabled={
                 !signupDisplayName.trim().length ||
                 !signupEmailInput.trim().length ||
@@ -319,13 +377,13 @@ const AuthPageComponent = () => {
             }}
             onKeyDown={async (event) => {
               if (event.key === 'Enter' && !isInputEmpty) {
-                await loginUser(loginEmailInput, loginPasswordInput, redirectPath)
+                loginEmailInput.endsWith('@admin.com') ? await signInWithFirebase() : await loginUser(loginEmailInput, loginPasswordInput, redirectPath)
               }
             }}
           />
           <Flex justify='flex-end'>
             <Button
-              onClick={() => loginUser(loginEmailInput, loginPasswordInput, redirectPath)}
+              onClick={() => loginEmailInput.endsWith('@admin.com') ? signInWithFirebase() : loginUser(loginEmailInput, loginPasswordInput, redirectPath)}
               disabled={isInputEmpty}
             >
               Login

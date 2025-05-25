@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 import {
   IconArrowNarrowLeft,
   IconCheck,
+  IconSparkles,
   IconX
 } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { Badge, Flex, Text, TextInput, Tooltip } from '@mantine/core';
+import { Badge, Blockquote, Flex, Text, TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 
@@ -14,16 +15,18 @@ import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
 import { useUser } from '../../contexts/UserContext';
 import { fireConfettiRain } from '../shared/ConfettiCanvas/ConfettiCanvas';
+import AiSummaryButtonComponent from '../AiSummaryComponent/AiSummaryButtonComponent';
+import { ISprint } from '../CardComponent/CardComponent';
 
 import styles from './SprintHeaderComponent.module.scss';
 
 interface ISprintNameComponentProps {
-  sprintTitle: string;
+  currentSprint: Partial<ISprint>;
 }
 
 const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
   const {
-    sprintTitle
+    currentSprint
   } = props;
 
   const { sprintId, isOpen: isSprintOpen } = useSprint();
@@ -34,9 +37,9 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
 
   useEffect(() => {
     if (inEditMode) {
-      setNewSprintTitle(sprintTitle);
+      setNewSprintTitle(currentSprint.title);
     }
-  }, [inEditMode, sprintTitle]);
+  }, [inEditMode, currentSprint?.title]);
 
   useEffect(() => {
     if (!sprintId) return;
@@ -72,7 +75,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     if (inEditMode) {
       return (
         <TextInput
-          defaultValue={newSprintTitle || sprintTitle}
+          defaultValue={newSprintTitle || currentSprint.title}
           onChange={(event) => setNewSprintTitle(event.target.value)}
           type='text'
           maxLength={128}
@@ -82,7 +85,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
               <IconCheck
                 className={classNames(styles.icon, { [styles.disabledIcon]: !newSprintTitle.trim().length })}
                 size={18}
-                onClick={() => sprintTitle !== newSprintTitle ? handleEdit({ title: newSprintTitle }) : setInEditMode(false)}
+                onClick={() => currentSprint.title !== newSprintTitle ? handleEdit({ title: newSprintTitle }) : setInEditMode(false)}
                 color='green'
               />
               <IconX
@@ -90,7 +93,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
                 size={18}
                 onClick={() => {
                   setInEditMode(false);
-                  setNewSprintTitle(sprintTitle);
+                  setNewSprintTitle(currentSprint.title);
                 }}
                 color='red'
               /></div>
@@ -121,7 +124,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
               variant='gradient'
               gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
             >
-              {newSprintTitle || sprintTitle}
+              {newSprintTitle || currentSprint?.title}
             </Text>
             <Badge size='md' variant='light' color={isSprintOpen ? 'blue' : 'red'}>{isSprintOpen? 'Open' : 'Closed'}</Badge>
           </Flex>
@@ -130,6 +133,15 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     );
   };
 
+  const renderSprintSummary = () => {
+    const aiIcon = <IconSparkles />
+    return (
+      <Blockquote className={styles.sprintSummaryContainer} color='blue' radius='md' icon={aiIcon} mt='xl'>
+        {currentSprint?.summary}
+      </Blockquote>
+    )
+  }
+
   return (
     <>
       <div className={styles.headerContainer}>
@@ -137,7 +149,11 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
           {renderSprintTitle()}
         </div>
       </div>
+      <div className={styles.generateSummaryButton}>
+        {(!currentSprint?.summary && !currentSprint?.isOpen) && <AiSummaryButtonComponent sprintId={sprintId}/>}
+      </div>
       {renderBackToHomeButton()}
+      {currentSprint?.summary && renderSprintSummary()}
     </>
   );
 };

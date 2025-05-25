@@ -122,7 +122,7 @@ const SprintBoardComponent = () => {
           disabled={noActionsAllowed}
         />
       )}
-      <SprintHeaderComponent sprintTitle={sprintTitle} />
+      <SprintHeaderComponent currentSprint={currentSprint} />
       <ThreeColumnsGridComponent
         messages={messages}
         onAddMessage={handleAddMessage}

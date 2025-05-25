@@ -9,6 +9,7 @@ import {
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, signOut } from 'firebase/auth';
 
 import { useUser } from '../../../contexts/UserContext';
 import { useSprint } from '../../../contexts/SprintContext';
@@ -36,7 +37,15 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
 
-  const onLogout = () => {
+  const onLogout = async () => {
+    const auth = getAuth();
+
+    try {
+      await signOut(auth);  // Sign out from Firebase Auth
+    } catch (error) {
+      console.error('Error signing out from Firebase:', error);
+    }
+
     Cookies.remove('userId', { path: '/' });
     Cookies.remove('displayName', { path: '/' });
     Cookies.remove('email', { path: '/' });
