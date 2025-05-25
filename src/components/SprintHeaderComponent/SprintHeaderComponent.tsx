@@ -31,7 +31,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
 
   const { sprintId, isOpen: isSprintOpen } = useSprint();
   const navigate = useNavigate();
-  const { team } = useUser();
+  const { team, isAdmin: isCurrentUserAdmin } = useUser();
   const [inEditMode, setInEditMode] = useState(false);
   const [newSprintTitle, setNewSprintTitle] = useState('');
 
@@ -150,7 +150,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
         </div>
       </div>
       <div className={styles.generateSummaryButton}>
-        {(!currentSprint?.summary && !currentSprint?.isOpen) && <AiSummaryButtonComponent sprintId={sprintId}/>}
+        {(!currentSprint?.summary && !currentSprint?.isOpen && isCurrentUserAdmin) && <AiSummaryButtonComponent sprintId={sprintId}/>}
       </div>
       {renderBackToHomeButton()}
       {currentSprint?.summary && renderSprintSummary()}

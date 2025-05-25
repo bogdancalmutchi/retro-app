@@ -11,7 +11,7 @@ admin.initializeApp();
 const openAiKey = defineSecret("OPENAI_API_KEY");
 
 // Define allowed frontend origins
-const allowedOrigins = ["http://localhost:5173", "https://sprintecho.com"];
+const allowedOrigins = ["http://localhost:5173", "https://sprintecho.com", "https://www.sprintecho.com"];
 
 export const generateSummary = onRequest(
   { secrets: [openAiKey] },
