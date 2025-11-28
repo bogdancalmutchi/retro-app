@@ -14,6 +14,32 @@ import { cookieLifetime } from '../../../utils/LocalStorage';
 import styles from './ConfettiCanvas.module.scss';
 
 let globalConfetti: confetti.CreateTypes | null = null;
+const winterMonths = [11, 0, 1]; // Dec, Jan, Feb
+const shouldSnow = winterMonths.includes(new Date().getMonth());
+
+const getBaseObject = (ticks: number, skew: number) => ({
+  particleCount: 20,
+  ticks,
+  origin: {
+    x: Math.random(),
+    y: Math.random() * skew - 0.2,
+  },
+  gravity: randomInRange(0.4, 0.6),
+  drift: randomInRange(-0.4, 0.4)
+});
+
+const getConfettiObject = (ticks: number, skew: number) => ({
+  ...getBaseObject(ticks, skew),
+  startVelocity: 50,
+  scalar: randomInRange(0.4, 1)
+});
+
+const getSnowflakesObject = (ticks: number, skew: number) => ({
+  ...getBaseObject(ticks, skew),
+  startVelocity: 0,
+  scalar: randomInRange(1, 1.5),
+  shapes: [confetti.shapeFromText({ text: "❄️", scalar: 2 })]
+});
 
 export const fireConfetti = () => {
   if (!globalConfetti) {
@@ -52,18 +78,7 @@ export const fireConfettiRain = () => {
     const ticks = Math.max(200, 500 * (timeLeft / duration));
     skew = Math.max(0.8, skew - 0.001);
 
-    globalConfetti!({
-      particleCount: 20,
-      startVelocity: 50,
-      ticks: ticks,
-      origin: {
-        x: Math.random(),
-        y: (Math.random() * skew) - 0.2,
-      },
-      gravity: randomInRange(0.4, 0.6),
-      scalar: randomInRange(0.4, 1),
-      drift: randomInRange(-0.4, 0.4),
-    });
+    globalConfetti!(shouldSnow ? getSnowflakesObject(ticks, skew) : getConfettiObject(ticks, skew));
 
     if (timeLeft > 0) {
       requestAnimationFrame(frame);
