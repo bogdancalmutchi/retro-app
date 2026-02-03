@@ -24,7 +24,15 @@ const SprintBoardComponent = () => {
   const { sprintId } = useParams<{ sprintId: string }>();
   const { userId } = useUser();
   const navigate = useNavigate();
-  const { setIsOpen, setSprintId, sprintId: contextSprintId } = useSprint(); // Access sprintId and setSprintId from context
+  const {
+    setIsOpen,
+    setSprintId,
+    sprintId: contextSprintId,
+    setPresenterId,
+    setHighlightedCardId,
+    presenterId,
+    highlightedCardId
+  } = useSprint();
   const [currentSprint, setCurrentSprint] = useState<Partial<ISprint>>();
   const [sprintTitle, setSprintTitle] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
@@ -63,6 +71,8 @@ const SprintBoardComponent = () => {
       setSprintTitle(data.title || sprintId);
       setCurrentSprint(data);
       setIsOpen(data.isOpen);
+      setPresenterId(data.presenterId || null);
+      setHighlightedCardId(data.highlightedCardId || null);
     } else {
       navigate('/');
     }
@@ -128,6 +138,8 @@ const SprintBoardComponent = () => {
         onAddMessage={handleAddMessage}
         onNoActionsAllowed={handleNoActionsAllowed}
         noActionsAllowed={noActionsAllowed}
+        highlightedCardId={highlightedCardId}
+        isPresenter={userId === presenterId}
       />
     </div>
   );

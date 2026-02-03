@@ -26,6 +26,8 @@ interface IThreeGridComponentProps {
   onAddMessage: (message: string, category: string) => void;
   onNoActionsAllowed: (allowed: boolean) => void;
   noActionsAllowed: boolean;
+  highlightedCardId: string | null;
+  isPresenter: boolean;
 }
 
 const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
@@ -33,7 +35,9 @@ const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
     messages,
     onAddMessage,
     onNoActionsAllowed,
-    noActionsAllowed
+    noActionsAllowed,
+    highlightedCardId,
+    isPresenter
   } = props;
 
   const goodMessages = messages.filter((msg) => msg.category === NoteCategory.Good);
@@ -49,6 +53,8 @@ const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
           onSubmit={(message) => onAddMessage(message, 'good')}
           onNoActionsAllowed={onNoActionsAllowed}
           noActionsAllowed={noActionsAllowed}
+          highlightedCardId={highlightedCardId}
+          isPresenter={isPresenter}
         />
         <ColumnComponent
           header='The Bad'
@@ -56,6 +62,8 @@ const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
           onSubmit={(message) => onAddMessage(message, 'bad')}
           onNoActionsAllowed={onNoActionsAllowed}
           noActionsAllowed={noActionsAllowed}
+          highlightedCardId={highlightedCardId}
+          isPresenter={isPresenter}
         />
         <ColumnComponent
           header='Action Items'
@@ -63,6 +71,8 @@ const ThreeColumnsGridComponent = (props: IThreeGridComponentProps) => {
           onSubmit={(message) => onAddMessage(message, 'action')}
           onNoActionsAllowed={onNoActionsAllowed}
           noActionsAllowed={noActionsAllowed}
+          highlightedCardId={highlightedCardId}
+          isPresenter={isPresenter}
         />
       </SimpleGrid>
     </Container>

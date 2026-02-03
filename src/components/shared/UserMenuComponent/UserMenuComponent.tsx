@@ -5,6 +5,8 @@ import {
   IconUserEdit,
   IconLogout,
   IconClipboard,
+  IconPresentation,
+  IconPresentationOff,
 } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
@@ -33,9 +35,25 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
 
   const navigate = useNavigate();
   const { canParty, setUserId, setDisplayName, setEmail, isAdmin } = useUser();
-  const { sprintId } = useSprint();
+  const { sprintId, isOpen: isSprintOpen, presenterId, setPresenterId, setHighlightedCardId } = useSprint();
   const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
+
+  const isPresenter = userId === presenterId;
+
+  const handleBecomePresenter = async () => {
+    if (!sprintId || !isSprintOpen) return;
+    const sprintRef = doc(db, 'sprints', sprintId);
+    await updateDoc(sprintRef, { presenterId: userId, highlightedCardId: null });
+  };
+
+  const handleStopPresenting = async () => {
+    if (!sprintId) return;
+    const sprintRef = doc(db, 'sprints', sprintId);
+    await updateDoc(sprintRef, { presenterId: null, highlightedCardId: null });
+    setPresenterId(null);
+    setHighlightedCardId(null);
+  };
 
   const onLogout = async () => {
     const auth = getAuth();
@@ -203,6 +221,25 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
                 <Menu.Divider />
               </>
               )}
+            {sprintId && isSprintOpen && !presenterId && (
+              <Menu.Item
+                onClick={handleBecomePresenter}
+                leftSection={<IconPresentation size={14} />}
+                color='violet'
+              >
+                Start Presenting
+              </Menu.Item>
+            )}
+            {sprintId && isPresenter && (
+              <Menu.Item
+                onClick={handleStopPresenting}
+                leftSection={<IconPresentationOff size={14} />}
+                color='red'
+              >
+                Stop Presenting
+              </Menu.Item>
+            )}
+            {sprintId && isSprintOpen && (isPresenter || !presenterId) && <Menu.Divider />}
             <Menu.Item onClick={() => setIsEditUserModalOpen(true)} leftSection={<IconUserEdit size={14} />}>
               Change Name
             </Menu.Item>

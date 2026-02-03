@@ -3,13 +3,14 @@ import { useEffect, useState } from 'react';
 import {
   IconArrowNarrowLeft,
   IconCheck,
+  IconPresentation,
   IconSparkles,
   IconX
 } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { Badge, Blockquote, Flex, Text, TextInput, Tooltip } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
@@ -29,11 +30,14 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
     currentSprint
   } = props;
 
-  const { sprintId, isOpen: isSprintOpen } = useSprint();
+  const { sprintId, isOpen: isSprintOpen, presenterId } = useSprint();
   const navigate = useNavigate();
-  const { team, isAdmin: isCurrentUserAdmin } = useUser();
+  const { team, isAdmin: isCurrentUserAdmin, userId, displayName } = useUser();
   const [inEditMode, setInEditMode] = useState(false);
   const [newSprintTitle, setNewSprintTitle] = useState('');
+  const [presenterName, setPresenterName] = useState<string | null>(null);
+
+  const isPresenter = userId === presenterId;
 
   useEffect(() => {
     if (inEditMode) {
@@ -52,6 +56,54 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
 
     return () => unsub();
   }, [sprintId]);
+
+  // Fetch presenter display name when presenterId changes
+  useEffect(() => {
+    if (!presenterId) {
+      setPresenterName(null);
+      return;
+    }
+    if (presenterId === userId) {
+      setPresenterName(displayName || 'You');
+      return;
+    }
+    // Fetch presenter's display name from Firestore
+    const fetchPresenterName = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', presenterId));
+        if (userDoc.exists()) {
+          setPresenterName(userDoc.data().displayName || 'Someone');
+        } else {
+          setPresenterName('Someone');
+        }
+      } catch {
+        setPresenterName('Someone');
+      }
+    };
+    fetchPresenterName();
+  }, [presenterId, userId, displayName]);
+
+  const renderPresenterIndicator = () => {
+    if (!isSprintOpen || !presenterId) return null;
+    const tooltipLabel = isPresenter
+      ? 'You are presenting. Click cards to highlight them.'
+      : `${presenterName} is highlighting cards for the team.`
+
+    return (
+      <Tooltip.Floating
+        color='blue'
+        label={tooltipLabel}
+      >
+        <Badge
+          size='sm'
+          variant={isPresenter ? 'filled' : 'light'}
+          leftSection={<IconPresentation size={12} />}
+        >
+          {isPresenter ? 'Presenting' : `${presenterName} is presenting`}
+        </Badge>
+      </Tooltip.Floating>
+    );
+  };
 
   const renderBackToHomeButton = () => (
     <div className={styles.backButtonContainer} onClick={() => navigate(`/?team=${encodeURIComponent(team)}`)}>
@@ -148,6 +200,7 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
         <div className={styles.titleAndButtonContainer}>
           {renderSprintTitle()}
         </div>
+        {renderPresenterIndicator()}
       </div>
       <div className={styles.generateSummaryButton}>
         {(!currentSprint?.summary && !currentSprint?.isOpen && isCurrentUserAdmin) && <AiSummaryButtonComponent sprintId={sprintId}/>}

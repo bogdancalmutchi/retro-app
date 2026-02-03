@@ -1,0 +1,14 @@
+@use 'sass:color';
+
+@mixin highlighted-card($color, $name) {
+  animation: pulse-#{$name} 1.5s ease-in-out infinite;
+
+  @keyframes pulse-#{$name} {
+    0%, 100% {
+      box-shadow: 0 0 0 3px color.adjust($color, $lightness: -15%), 0 0 20px rgba($color, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 5px color.adjust($color, $lightness: -15%), 0 0 30px rgba($color, 0.9);
+    }
+  }
+}

@@ -4,6 +4,8 @@
   justify-content: center;
   min-height: 54px;
   padding-top: 15px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .header {
@@ -55,4 +57,10 @@
   display: flex;
   justify-content: center;
   margin-top: 16px;
+}
+
+.presenterControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

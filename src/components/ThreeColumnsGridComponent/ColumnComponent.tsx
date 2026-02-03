@@ -22,6 +22,8 @@ interface IColumnComponentProps {
   onSubmit: (message: string) => void;
   onNoActionsAllowed: (allowed: boolean) => void;
   noActionsAllowed: boolean;
+  highlightedCardId: string | null;
+  isPresenter: boolean;
 }
 
 const ColumnComponent = (props: IColumnComponentProps) => {
@@ -30,7 +32,9 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     messages,
     onSubmit,
     onNoActionsAllowed,
-    noActionsAllowed
+    noActionsAllowed,
+    highlightedCardId,
+    isPresenter
   } = props;
 
   const { sprintId, isOpen: isSprintOpen } = useSprint();
@@ -146,6 +150,13 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     setNoteToBeEdited(note);
     setInEditMode(true);
     onNoActionsAllowed(true);
+  };
+
+  const handleCardClick = async (noteId: string) => {
+    if (!isPresenter || !sprintId || !isSprintOpen) return;
+    const sprintRef = doc(db, 'sprints', sprintId);
+    const newHighlightedId = highlightedCardId === noteId ? null : noteId;
+    await updateDoc(sprintRef, { highlightedCardId: newHighlightedId });
   };
 
   const renderDeleteModal = () => {
@@ -331,8 +342,11 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                           [styles.goodItemContainer]: note.category === NoteCategory.Good,
                           [styles.badItemContainer]: note.category === NoteCategory.Bad,
                           [styles.actionItemContainer]: note.category === NoteCategory.ActionItem,
-                          [styles.dragging]: snapshot.isDragging
+                          [styles.dragging]: snapshot.isDragging,
+                          [styles.highlighted]: highlightedCardId === note.id,
+                          [styles.presenterClickable]: isPresenter && note.published
                         })}
+                        onClick={() => note.published && handleCardClick(note.id)}
                       >
                         {renderNoteCard(note)}
                       </div>
