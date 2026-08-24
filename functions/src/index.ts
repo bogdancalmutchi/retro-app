@@ -81,7 +81,16 @@ export const generateSummary = onRequest(
 
       const data = await response.json();
 
-      // Forward OpenAI response
+      // Forward OpenAI's own status rather than always answering 200. Answering
+      // 200 on failure meant the client could not tell a refusal from a summary,
+      // so it wrote a placeholder into the sprint - which then hid the button
+      // that would have let anyone retry.
+      if (!response.ok) {
+        logger.error("OpenAI request failed", { status: response.status, body: data });
+        res.status(response.status).send(data);
+        return;
+      }
+
       res.status(200).send(data);
     } catch (err) {
       logger.error("Error in generateSummary:", err);

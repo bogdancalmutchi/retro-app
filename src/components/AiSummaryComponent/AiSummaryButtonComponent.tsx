@@ -4,7 +4,8 @@ import { collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { INote, NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import { getAuth } from 'firebase/auth';
-import { IconSparkles } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { IconAlertTriangle, IconSparkles } from '@tabler/icons-react';
 
 interface IAiSummaryComponentProps {
   sprintId: string;
@@ -81,13 +82,33 @@ const AiSummaryButtonComponent = ({ sprintId }: IAiSummaryComponentProps) => {
       body: JSON.stringify({ prompt }),
       });
 
-      if (!response.ok) throw new Error("Failed to fetch summary");
+      if (!response.ok) {
+        const detail = await response.json().catch(() => null);
+        throw new Error(
+          detail?.error?.message ?? `The summary service returned ${response.status}.`
+        );
+      }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content ?? "No summary generated.";
+      const content = data.choices?.[0]?.message?.content;
+
+      // Only ever save a real summary. This used to fall back to a placeholder
+      // string, which was then written to the sprint - and because the button
+      // only renders while summary is empty, that made the failure permanent.
+      if (!content) {
+        throw new Error('The model returned an empty summary.');
+      }
+
       await updateDoc(sprintDocRef, { summary: content });
     } catch (err) {
       console.error(err);
+      notifications.show({
+        icon: <IconAlertTriangle size={20} />,
+        title: 'Could not generate the summary',
+        message: err instanceof Error ? err.message : 'Please try again.',
+        position: 'top-right',
+        color: 'red'
+      });
     } finally {
       setLoading(false);
     }

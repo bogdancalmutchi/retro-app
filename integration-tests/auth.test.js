@@ -345,12 +345,23 @@ describe('generateSummary is admin-only', () => {
 
   it('lets an admin past the gate', async () => {
     const credential = await signInAs(ADMIN_EMAIL);
-    const res = await post(await credential.user.getIdToken());
 
-    // Deliberately not asserting 200: getting past the gate means it goes on to
-    // call OpenAI, which has no usable key in the emulator. Anything other than
-    // 401/403 proves the authorisation check passed.
-    assert.ok(res.status !== 401 && res.status !== 403, `unexpected ${res.status}`);
+    // Sent with no prompt on purpose. The function validates the caller first
+    // and only then the body, so a 400 proves the admin cleared the gate while
+    // stopping short of the OpenAI call - these tests must not spend real money
+    // or depend on the account's credit balance. The emulator resolves the live
+    // secret from Secret Manager, so a request with a prompt would genuinely
+    // bill the account.
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await credential.user.getIdToken()}`
+      },
+      body: JSON.stringify({})
+    });
+
+    assert.equal(res.status, 400);
   });
 });
 
