@@ -1,54 +1,39 @@
-# React + TypeScript + Vite
+# SprintEcho
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sprint retrospective board for running team retros together, live.
 
-Currently, two official plugins are available:
+Available at [sprintecho.com](https://sprintecho.com).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What it does
 
-## Expanding the ESLint configuration
+**Three columns for feedback.** Every retro is organised into *The Good*,
+*The Bad*, and *Action Items*. Anyone on the team can add notes to any column.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Everyone contributes at once.** The board updates live, so notes, votes and
+reordering appear for everybody as they happen — no refreshing, no waiting for
+one person to type everything up.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+**Vote on what matters.** Notes can be liked or disliked, so the team can see
+quickly which points resonate and which ones to spend the discussion time on.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Take turns presenting.** One person can claim the presenter role and
+highlight the note being discussed, so everyone is looking at the same thing.
+When they're done, someone else picks it up.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**Drag to organise.** Notes can be reordered within a column to group related
+points together or rank them.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+**AI summary.** At the end of a retro, the board can generate a written summary
+of what was raised and what was agreed, so there's something to share without
+anyone taking minutes.
+
+**Sprints and teams.** Each retro is its own sprint, kept as a record you can go
+back to. Sprints belong to a team, so different teams keep their own boards.
+
+**A hidden bit of fun.** There's an easter egg. You'll find it.
+
+## Getting an account
+
+Sign up with your work email address and pick your team. If an admin has given
+you a temporary password, you'll be asked to choose your own the first time you
+sign in.

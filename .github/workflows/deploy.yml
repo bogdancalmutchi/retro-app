@@ -16,12 +16,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18.19.1
+          # sass needs >=20.19 and react-router-dom needs >=20; this also
+          # matches the runtime the functions use.
+          node-version: 22
 
       - name: Install dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+        # npm ci installs exactly what package-lock.json pins. The previous step
+        # deleted the lockfile first, so CI silently resolved the newest matching
+        # versions on every run and never built the same tree twice.
+        run: npm ci
 
       - name: Create .env file
         run: |

@@ -1,52 +1,81 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import bcrypt from 'bcryptjs';
-import Cookies from 'js-cookie';
-import { collection, doc, DocumentData, getDocs, setDoc, updateDoc } from 'firebase/firestore';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
-import { v4 as uuidv4 } from 'uuid';
 
-import { useUser } from '../../contexts/UserContext';
-import { db } from '../../firebase';
-import { cookieLifetime } from '../../utils/LocalStorage';
+import { auth, db, functions } from '../../firebase';
 import LowPolyBackgroundComponent from '../shared/LowPolyBackgroundComponent/LowPolyBackgroundComponent';
 import AnimatedAppLogoComponent from '../shared/AppLogoComponent/AnimatedAppLogoComponent';
 
 import styles from './AuthPageComponent.module.scss';
 
+const MIN_PASSWORD_LENGTH = 10;
+
+const signupCallable = httpsCallable<
+  { displayName: string; email: string; password: string; team: string },
+  { ok: boolean; team: string }
+>(functions, 'signup');
+
+/**
+ * Firebase reports a wrong password and an unknown account with different codes
+ * depending on whether email-enumeration protection is on. Both collapse to one
+ * message so the form never reveals which addresses exist.
+ */
+const signInMessage = (error: unknown) => {
+  const code = (error as { code?: string })?.code ?? '';
+
+  if (code === 'auth/too-many-requests') {
+    return 'Too many attempts. Please wait a few minutes and try again.';
+  }
+  if (
+    code === 'auth/invalid-credential' ||
+    code === 'auth/wrong-password' ||
+    code === 'auth/user-not-found' ||
+    code === 'auth/invalid-email'
+  ) {
+    return 'Incorrect email or password.';
+  }
+  return 'Could not sign you in. Please try again.';
+};
+
+/** Callable errors arrive as `functions/<code>`; their message is safe to show. */
+const callableMessage = (error: unknown, fallback: string) => {
+  const message = (error as { message?: string })?.message;
+  return message && message !== 'INTERNAL' ? message : fallback;
+};
+
 const AuthPageComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.from?.pathname + location.state?.from?.search || '/';
-  const { setUserId, setDisplayName, setEmail, setTeam, setCanParty, setIsAdmin, setHasTempPassword } = useUser();
 
-  const allowedDomain = '@intralinks.com';
-  const [emailDomainError, setEmailDomainError] = useState(false);
-  const [emailFormatError, setEmailFormatError] = useState(false);
   const [signupEmailInput, setSignupEmailInput] = useState('');
   const [signupPasswordInput, setSignupPasswordInput] = useState('');
   const [signupDisplayName, setSignupDisplayName] = useState('');
   const [signupTeam, setSignupTeam] = useState('');
+  const [signupError, setSignupError] = useState('');
+
   const [loginEmailInput, setLoginEmailInput] = useState('');
   const [loginPasswordInput, setLoginPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [newPasswordError, setNewPasswordError] = useState('');
+
   const [isSignupModalRendered, setIsSignupModalRendered] = useState(false);
   const [isLoginModalRendered, setIsLoginModalRendered] = useState(false);
-  const [isResetPasswordModalRendered, setIsResetPasswordModalRendered] = useState(false);
-  const [resetPasswordConfirmPassInput, setResetPasswordConfirmPassInput] = useState('');
-  const [resetPasswordNewPassInput, setResetPasswordNewPassInput] = useState('');
-  const [incorrectEmailError, setIncorrectEmailError] = useState('');
-  const [incorrectPasswordError, setIncorrectPasswordError] = useState('');
-  const [notMatchingPasswordError, setNotMatchingPasswordError] = useState('');
-  const [userExistsError, setUserExistsError] = useState('');
+  const [isNewPasswordModalRendered, setIsNewPasswordModalRendered] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   const resetLoginModalState = () => {
     setIsLoginModalRendered(false);
     setLoginEmailInput('');
     setLoginPasswordInput('');
-    setIncorrectEmailError('');
-    setIncorrectPasswordError('');
+    setLoginError('');
   };
 
   const resetSignupModalState = () => {
@@ -54,224 +83,119 @@ const AuthPageComponent = () => {
     setSignupDisplayName('');
     setSignupEmailInput('');
     setSignupPasswordInput('');
-    setEmailDomainError(false);
-    setEmailFormatError(false);
+    setSignupTeam('');
+    setSignupError('');
   };
 
-  const isEmailFormatValid = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const goToApp = (team: string | null, path: string = '/') => {
+    const url = new URL(window.location.origin + path);
+    if (team) {
+      url.searchParams.set('team', team);
+    }
+    navigate(url.pathname + url.search);
   };
 
-  const registerUser = async (displayName: string, email: string, password: string, team: string) => {
+  // Firebase verifies the password itself, so nothing here handles credentials.
+  const onLogin = async () => {
+    setIsBusy(true);
+    setLoginError('');
+
     try {
-      const userId = uuidv4();
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        loginEmailInput,
+        loginPasswordInput
+      );
 
-      // Check if email already exists
-      const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
-      const existing = snapshot.docs.find(doc => doc.data().email === email);
+      const profile = await getDoc(doc(db, 'users', credential.user.uid));
+      const data = profile.data();
 
-      if (existing) {
-        console.error('User with this email already exists.');
-        setUserExistsError('User with this email already exists.');
+      if (data?.hasTempPassword) {
+        // Signed in on a password an admin chose. Force a change first.
+        setIsLoginModalRendered(false);
+        setIsNewPasswordModalRendered(true);
         return;
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      goToApp(data?.team ?? null, redirectPath);
+    } catch (error) {
+      setLoginError(signInMessage(error));
+    } finally {
+      setIsBusy(false);
+    }
+  };
 
-      // Store user using UUID as doc ID
-      const userRef = doc(db, 'users', userId);
-      await setDoc(userRef, {
-        email,
-        displayName,
-        team,
-        canParty: false,
-        id: userId,
-        passwordHash: hashedPassword,
-        hasTempPassword: false,
-        isAdmin: false
+  const onSignup = async () => {
+    setIsBusy(true);
+    setSignupError('');
+
+    try {
+      const { data } = await signupCallable({
+        displayName: signupDisplayName,
+        email: signupEmailInput,
+        password: signupPasswordInput,
+        team: signupTeam
       });
 
-      Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
-      Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
-      Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
-      Cookies.set('userTeam', team, { expires: cookieLifetime, path: '/' });
-      Cookies.set('canParty', team, { expires: cookieLifetime, path: '/' });
-
-      setUserId(userId);
-      setDisplayName(displayName);
-      setEmail(email);
-      setTeam(team);
-      setCanParty(false);
-
-      navigate(`/?team=${encodeURIComponent(team)}`);
+      // The account exists now; sign in with it the ordinary way.
+      await signInWithEmailAndPassword(auth, signupEmailInput, signupPasswordInput);
+      goToApp(data.team);
     } catch (error) {
-      console.error('Error registering user:', error);
+      setSignupError(callableMessage(error, 'Could not create your account.'));
+    } finally {
+      setIsBusy(false);
     }
   };
 
-  const getUsersData = async (email: string) => {
-    const usersRef = collection(db, 'users');
-    const snapshot = await getDocs(usersRef);
-    const userDoc = snapshot.docs.find(doc => doc.data().email === email);
-
-    if (!userDoc) {
-      setIncorrectEmailError('User not found');
+  const onSetNewPassword = async () => {
+    if (newPasswordInput !== confirmPasswordInput) {
+      setNewPasswordError('Passwords do not match');
+      return;
+    }
+    if (newPasswordInput.length < MIN_PASSWORD_LENGTH) {
+      setNewPasswordError(`Use at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 
-    return userDoc.data();
-  }
-
-  const setUserData = (data: DocumentData) => {
-    const userId = data.id;
-    const displayName = data.displayName;
-    const userTeam = data.team;
-    const canParty = data.canParty;
-    const isAdmin = data.isAdmin;
-    const email = data.email;
-
-    // Store the UUID in a cookie
-    Cookies.set('userId', userId, { expires: cookieLifetime, path: '/' });
-    Cookies.set('displayName', displayName, { expires: cookieLifetime, path: '/' });
-    Cookies.set('email', email, { expires: cookieLifetime, path: '/' });
-    Cookies.set('userTeam', userTeam, { expires: cookieLifetime, path: '/' });
-    Cookies.set('canParty', canParty, { expires: cookieLifetime, path: '/' });
-
-    setUserId(userId);
-    setDisplayName(displayName);
-    setEmail(email);
-    setTeam(userTeam);
-    setCanParty(canParty);
-    setIsAdmin(isAdmin);
-  }
-
-  const onClickRegister = async () => {
-    if (!isEmailFormatValid(signupEmailInput)) {
-      setEmailFormatError(true);
-      return;
-    }
-    setEmailFormatError(false);
-
-    if (!signupEmailInput.endsWith(allowedDomain) || !signupEmailInput.endsWith('@admin.com')) {
-      setEmailDomainError(true);
-      return;
-    }
-    setEmailDomainError(false);
-
-    await registerUser(signupDisplayName, signupEmailInput, signupPasswordInput, signupTeam);
-  }
-
-  const registerWithFirebase = async () => {
-    const auth = getAuth();
+    setIsBusy(true);
+    setNewPasswordError('');
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, signupEmailInput, signupPasswordInput);
-      const user = userCredential.user;
-
-      const userId = uuidv4();
-      const userRef = doc(db, 'users', userId);
-
-      const userData = {
-        email: user.email,
-        displayName: signupDisplayName,
-        team: signupTeam,
-        canParty: true,
-        id: userId,
-        hasTempPassword: false,
-        isAdmin: true
-      };
-
-      await setDoc(userRef, userData);
-
-      setUserData(userData);
-
-      navigate(`/?team=${encodeURIComponent(signupTeam)}`);
-    } catch (error) {
-      console.error('Firebase registration error:', error);
-      setUserExistsError(error.message);
-    }
-  };
-
-  const signInWithFirebase = async () => {
-    const auth = getAuth();
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, loginEmailInput, loginPasswordInput);
-      const user = userCredential.user;
-
-      // Get matching user from Firestore
-      const data = await getUsersData(user.email || '');
-      if (!data) {
-        setIncorrectEmailError('User not found in Firestore');
+      const user = auth.currentUser;
+      if (!user) {
+        setNewPasswordError('Your session expired. Please sign in again.');
         return;
       }
 
-      // Set cookies and context
-      setUserData(data);
+      // Firebase requires a recent sign-in for this, which we just did.
+      await updatePassword(user, newPasswordInput);
+      await updateDoc(doc(db, 'users', user.uid), { hasTempPassword: false });
 
-      const url = new URL(window.location.origin + redirectPath);
-      url.searchParams.set('team', data.team);
-      navigate(url.pathname + url.search);
+      const profile = await getDoc(doc(db, 'users', user.uid));
+
+      setIsNewPasswordModalRendered(false);
+      goToApp(profile.data()?.team ?? null, redirectPath);
     } catch (error) {
-      console.error('Firebase login error:', error);
-      setIncorrectPasswordError('Incorrect email or password');
+      const code = (error as { code?: string })?.code ?? '';
+      setNewPasswordError(
+        code === 'auth/weak-password'
+          ? 'That password is too weak.'
+          : code === 'auth/requires-recent-login'
+            ? 'Please sign in again before changing your password.'
+            : 'Could not update your password.'
+      );
+    } finally {
+      setIsBusy(false);
     }
   };
-
-  const loginUser = async (email: string, password: string, redirectPath: string = '/') => {
-    try {
-      const data = await getUsersData(email);
-      const isPasswordValid = await bcrypt.compare(password, data.passwordHash);
-
-      if (!isPasswordValid) {
-        setIncorrectPasswordError('Incorrect password');
-        return;
-      }
-
-      if (data.hasTempPassword) {
-        setIsLoginModalRendered(false);
-        setIsResetPasswordModalRendered(true);
-        return;
-      }
-
-      setUserData(data);
-
-      setIncorrectEmailError(null);
-      setIncorrectPasswordError(null);
-
-      const url = new URL(window.location.origin + redirectPath);
-      url.searchParams.set('team', data.team);
-      navigate(url.pathname + url.search);
-    } catch (error) {
-      console.error('Error logging in user:', error);
-    }
-  };
-
-  const loginUserAfterPassReset = async (email: string, confirmPassword: string, newPassword: string) => {
-    const data = await getUsersData(email);
-    const userRef = doc(db, 'users', data.id);
-    const isNewPasswordMatching = confirmPassword === newPassword;
-
-    if (data.hasTempPassword && !isNewPasswordMatching) {
-      setNotMatchingPasswordError('Passwords do not match');
-      return;
-    }
-
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
-    await updateDoc(userRef, {
-      hasTempPassword: false,
-      passwordHash: newPasswordHash
-    });
-
-    setUserData(data);
-    setHasTempPassword(false);
-    navigate(`/?team=${encodeURIComponent(data.team)}`);
-  }
 
   const renderSignupModal = () => {
+    const isInputEmpty =
+      !signupDisplayName.trim().length ||
+      !signupEmailInput.trim().length ||
+      !signupPasswordInput.trim().length ||
+      !signupTeam;
+
     return (
       <Modal
         centered
@@ -284,7 +208,7 @@ const AuthPageComponent = () => {
             data-autofocus
             label='Name'
             placeholder='Name'
-            maxLength={128}
+            maxLength={40}
             value={signupDisplayName}
             withAsterisk
             onChange={(event) => setSignupDisplayName(event.currentTarget.value)}
@@ -293,23 +217,14 @@ const AuthPageComponent = () => {
             label='Email'
             placeholder='e-mail'
             value={signupEmailInput}
-            error={
-              emailFormatError
-                ? 'Invalid email format.'
-                : emailDomainError
-                  ? 'Email domain not allowed.'
-                  : userExistsError
-            }
+            error={signupError}
             withAsterisk
-            onFocus={() => {
-              setEmailDomainError(false);
-              setUserExistsError('');
-            }}
+            onFocus={() => setSignupError('')}
             onChange={(event) => setSignupEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
             label='Password'
-            placeholder='Password'
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             value={signupPasswordInput}
             type='password'
             maxLength={128}
@@ -319,23 +234,17 @@ const AuthPageComponent = () => {
           <Radio.Group
             name='team'
             label='Select Team'
+            value={signupTeam}
+            onChange={setSignupTeam}
             withAsterisk
           >
             <Group mt='xs'>
-              <Radio onChange={(event) => setSignupTeam(event.currentTarget.value)} value='Protoss' label='Protoss' />
-              <Radio onChange={(event) => setSignupTeam(event.currentTarget.value)} value='Tigers' label='Tigers' />
+              <Radio value='Protoss' label='Protoss' />
+              <Radio value='Tigers' label='Tigers' />
             </Group>
           </Radio.Group>
           <Flex justify='flex-end'>
-            <Button
-              onClick={() => signupEmailInput.endsWith('@admin.com') ? registerWithFirebase() : onClickRegister()}
-              disabled={
-                !signupDisplayName.trim().length ||
-                !signupEmailInput.trim().length ||
-                !signupPasswordInput.trim().length ||
-                !signupTeam
-              }
-            >
+            <Button onClick={onSignup} loading={isBusy} disabled={isInputEmpty}>
               Create
             </Button>
           </Flex>
@@ -346,6 +255,7 @@ const AuthPageComponent = () => {
 
   const renderLoginModal = () => {
     const isInputEmpty = !loginEmailInput.trim().length || !loginPasswordInput.trim().length;
+
     return (
       <Modal
         centered
@@ -359,33 +269,26 @@ const AuthPageComponent = () => {
             label='Email'
             placeholder='e-mail'
             value={loginEmailInput}
-            error={incorrectEmailError}
-            onFocus={() => setIncorrectEmailError('')}
+            onFocus={() => setLoginError('')}
             onChange={(event) => setLoginEmailInput(event.currentTarget.value.trim().toLowerCase())}
           />
           <TextInput
             label='Password'
             placeholder='Password'
             value={loginPasswordInput}
-            error={incorrectPasswordError}
+            error={loginError}
             type='password'
             maxLength={128}
-            onFocus={() => setIncorrectPasswordError('')}
-            onChange={(event) => {
-              setIncorrectPasswordError('');
-              setLoginPasswordInput(event.currentTarget.value);
-            }}
+            onFocus={() => setLoginError('')}
+            onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
             onKeyDown={async (event) => {
-              if (event.key === 'Enter' && !isInputEmpty) {
-                loginEmailInput.endsWith('@admin.com') ? await signInWithFirebase() : await loginUser(loginEmailInput, loginPasswordInput, redirectPath)
+              if (event.key === 'Enter' && !isInputEmpty && !isBusy) {
+                await onLogin();
               }
             }}
           />
           <Flex justify='flex-end'>
-            <Button
-              onClick={() => loginEmailInput.endsWith('@admin.com') ? signInWithFirebase() : loginUser(loginEmailInput, loginPasswordInput, redirectPath)}
-              disabled={isInputEmpty}
-            >
+            <Button onClick={onLogin} loading={isBusy} disabled={isInputEmpty}>
               Login
             </Button>
           </Flex>
@@ -394,55 +297,57 @@ const AuthPageComponent = () => {
     );
   };
 
-  const renderResetPasswordModal = () => {
-    const isInputEmpty = !resetPasswordConfirmPassInput.trim().length || !resetPasswordNewPassInput.trim().length;
+  const renderNewPasswordModal = () => {
+    const isInputEmpty = !newPasswordInput.trim().length || !confirmPasswordInput.trim().length;
+
     return (
       <Modal
         centered
-        title='Reset Password'
-        opened={isResetPasswordModalRendered}
-        onClose={resetLoginModalState}
+        title='Choose a new password'
+        opened={isNewPasswordModalRendered}
+        withCloseButton={false}
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+        // Deliberately not dismissable: a temporary password must be replaced
+        // before the user reaches the app.
+        onClose={() => undefined}
       >
         <Flex direction='column' gap='md'>
           <TextInput
             data-autofocus
             label='New Password'
-            placeholder='New Password'
-            value={resetPasswordNewPassInput}
-            error={notMatchingPasswordError}
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+            value={newPasswordInput}
             type='password'
             maxLength={128}
             withAsterisk
-            onFocus={() => setNotMatchingPasswordError('')}
-            onChange={(event) => setResetPasswordNewPassInput(event.currentTarget.value)}
+            onFocus={() => setNewPasswordError('')}
+            onChange={(event) => setNewPasswordInput(event.currentTarget.value)}
           />
           <TextInput
             label='Confirm Password'
             placeholder='Confirm Password'
             type='password'
-            value={resetPasswordConfirmPassInput}
-            error={notMatchingPasswordError}
+            value={confirmPasswordInput}
+            error={newPasswordError}
             withAsterisk
-            onFocus={() => setNotMatchingPasswordError('')}
-            onChange={(event) => setResetPasswordConfirmPassInput(event.currentTarget.value)}
+            onFocus={() => setNewPasswordError('')}
+            onChange={(event) => setConfirmPasswordInput(event.currentTarget.value)}
             onKeyDown={async (event) => {
-              if (event.key === 'Enter' && !isInputEmpty) {
-                await loginUserAfterPassReset(loginEmailInput, resetPasswordConfirmPassInput, resetPasswordNewPassInput)
+              if (event.key === 'Enter' && !isInputEmpty && !isBusy) {
+                await onSetNewPassword();
               }
             }}
           />
           <Flex justify='flex-end'>
-            <Button
-              onClick={() => loginUserAfterPassReset(loginEmailInput, resetPasswordConfirmPassInput, resetPasswordNewPassInput)}
-              disabled={isInputEmpty}
-            >
-              Login
+            <Button onClick={onSetNewPassword} loading={isBusy} disabled={isInputEmpty}>
+              Save and continue
             </Button>
           </Flex>
         </Flex>
       </Modal>
     );
-  }
+  };
 
   const renderAuthPage = () => {
     return (
@@ -475,7 +380,7 @@ const AuthPageComponent = () => {
       <LowPolyBackgroundComponent />
       {isSignupModalRendered && renderSignupModal()}
       {isLoginModalRendered && renderLoginModal()}
-      {isResetPasswordModalRendered && renderResetPasswordModal()}
+      {isNewPasswordModalRendered && renderNewPasswordModal()}
       {renderAuthPage()}
     </>
   );

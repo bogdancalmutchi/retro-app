@@ -8,15 +8,13 @@ import {
   IconPresentation,
   IconPresentationOff,
 } from '@tabler/icons-react';
-import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getAuth, signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 
 import { useUser } from '../../../contexts/UserContext';
 import { useSprint } from '../../../contexts/SprintContext';
-import { db } from '../../../firebase';
-import { cookieLifetime } from '../../../utils/LocalStorage';
+import { auth, db } from '../../../firebase';
 
 import styles from './UserMenuComponent.module.scss';
 
@@ -34,7 +32,7 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   } = props;
 
   const navigate = useNavigate();
-  const { canParty, setUserId, setDisplayName, setEmail, isAdmin } = useUser();
+  const { canParty, setDisplayName, isAdmin } = useUser();
   const { sprintId, isOpen: isSprintOpen, presenterId, setPresenterId, setHighlightedCardId } = useSprint();
   const [isEditUserModalOpen, setIsEditUserModalOpen] = React.useState(false);
   const [newDisplayName, setNewDisplayName] = React.useState('');
@@ -56,23 +54,13 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
   };
 
   const onLogout = async () => {
-    const auth = getAuth();
-
     try {
-      await signOut(auth);  // Sign out from Firebase Auth
+      // Ending the Firebase session is the whole logout now: UserContext
+      // watches it and clears every field on its own.
+      await signOut(auth);
     } catch (error) {
       console.error('Error signing out from Firebase:', error);
     }
-
-    Cookies.remove('userId', { path: '/' });
-    Cookies.remove('displayName', { path: '/' });
-    Cookies.remove('email', { path: '/' });
-    Cookies.remove('userTeam', { path: '/' });
-    Cookies.remove('canParty', { path: '/' });
-
-    setUserId(null);
-    setDisplayName(null);
-    setEmail(null);
 
     navigate('/auth');
   };
@@ -85,10 +73,6 @@ const UserMenuComponent = (props: IUserMenuComponentProps) => {
       await updateDoc(userRef, {
         displayName: newDisplayName,
       });
-
-      // Update cookies
-      Cookies.remove('displayName', { path: '/' });
-      Cookies.set('displayName', newDisplayName, { expires: cookieLifetime, path: '/' });
 
       setDisplayName(newDisplayName);
 

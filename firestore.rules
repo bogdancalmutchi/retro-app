@@ -1,0 +1,122 @@
+rules_version = '2';
+
+// SprintEcho Firestore rules.
+//
+// These rules assume every user has a real Firebase Auth session, which only
+// becomes true once login moves into the `login` Cloud Function and the client
+// calls signInWithCustomToken. Deploying them before that lands will lock out
+// every user who is not an @admin.com account.
+//
+// Roles live in custom claims (request.auth.token.isAdmin), set server-side.
+// They are deliberately NOT read from the users document: a rule that reads
+// users/{uid}.isAdmin would let anyone who can write that field escalate.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // `request.auth != null` is not proof of anything on this project: anonymous
+    // sign-in has been enabled and anyone holding the public web API key can
+    // mint an anonymous session. Excluding that one provider is deliberate
+    // rather than pinning 'password', so enabling corporate SSO later does not
+    // silently lock everybody out.
+    function isSignedIn() {
+      return request.auth != null
+             && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Uses get() with a default: reading a claim that a user simply does not
+    // have raises an evaluation error, which can sink an unrelated branch of
+    // an || expression rather than just being false.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.get('isAdmin', false) == true;
+    }
+
+    // Keys this write touches, compared against the stored document.
+    function touchedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // There is deliberately no password collection: Firebase Auth stores and
+    // verifies passwords, so no hash exists anywhere in Firestore. Any path not
+    // matched below is denied by default.
+
+    match /users/{uid} {
+      // Single-profile reads are needed all over the app: presenter name in
+      // the sprint header, note authors, dicebear avatar seeds.
+      allow get: if isSignedIn();
+
+      // Enumerating every profile is only the admin page's job.
+      allow list: if isAdmin();
+
+      // Profiles are provisioned server-side, so that isAdmin, email, team
+      // and passwordHash can never be chosen by the client.
+      allow create, delete: if false;
+
+      // A user may rename themselves, unlock the confetti easter egg, and clear
+      // their own temporary-password flag once they have chosen a real password
+      // (the password change itself happens in Firebase Auth, not here).
+      // request.resource.data is the full post-write document, so validating it
+      // covers every field regardless of which one changed.
+      allow update: if isSelf(uid)
+                    && touchedKeys().hasOnly(['displayName', 'canParty', 'hasTempPassword'])
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() > 0
+                    && request.resource.data.displayName.size() <= 40
+                    && request.resource.data.canParty is bool
+                    && (!touchedKeys().hasAny(['hasTempPassword'])
+                        || request.resource.data.hasTempPassword == false);
+    }
+
+    match /sprints/{sprintId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow delete: if isAdmin();
+
+      // Presenter handoff, card highlighting, the celebrate flag and the AI
+      // summary are all collaborative, so any signed-in user may set them.
+      allow update: if isSignedIn()
+                    && touchedKeys().hasOnly([
+                         'presenterId',
+                         'highlightedCardId',
+                         'celebrating',
+                         'summary',
+                         'isOpen',
+                         'name'
+                       ]);
+
+      match /items/{itemId} {
+        allow read: if isSignedIn();
+
+        // A note must be attributed to whoever actually wrote it.
+        allow create: if isSignedIn()
+                      && request.resource.data.createdBy == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 2000
+                      && request.resource.data.category in ['good', 'bad', 'action'];
+
+        // Authors edit their own notes; everyone else may only vote,
+        // reorder, or publish.
+        allow update: if isSignedIn()
+                      && (resource.data.createdBy == request.auth.uid
+                          || isAdmin()
+                          || touchedKeys().hasOnly([
+                               'likes',
+                               'dislikes',
+                               'order',
+                               'published',
+                               'isOpen'
+                             ]));
+
+        allow delete: if isSignedIn()
+                      && (resource.data.createdBy == request.auth.uid || isAdmin());
+      }
+    }
+
+    // Anything not matched above is denied. Keep it that way.
+  }
+}
