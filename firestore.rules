@@ -76,8 +76,10 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow delete: if isAdmin();
 
-      // Presenter handoff, card highlighting, the celebrate flag and the AI
-      // summary are all collaborative, so any signed-in user may set them.
+      // Presenter handoff, card highlighting, the celebrate flag, closing the
+      // sprint, renaming it and the AI summary are all collaborative, so any
+      // signed-in user may set them. This is the complete set the client writes;
+      // team and createdAt are set once at creation and never updated.
       allow update: if isSignedIn()
                     && touchedKeys().hasOnly([
                          'presenterId',
@@ -85,7 +87,7 @@ service cloud.firestore {
                          'celebrating',
                          'summary',
                          'isOpen',
-                         'name'
+                         'title'
                        ]);
 
       match /items/{itemId} {

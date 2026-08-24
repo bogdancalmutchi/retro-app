@@ -81,12 +81,16 @@ beforeEach(async () => {
       isAdmin: false,
       hasTempPassword: false
     });
+    // Same shape CreateSprintModalComponent writes.
     await setDoc(doc(db, 'sprints', SPRINT), {
-      name: 'Sprint 1',
+      title: 'Sprint 1',
+      team: 'Protoss',
       isOpen: true,
+      createdAt: new Date('2026-01-01'),
       presenterId: null,
       highlightedCardId: null,
-      celebrating: false
+      celebrating: false,
+      summary: ''
     });
     await setDoc(doc(db, 'sprints', SPRINT, 'items', NOTE), {
       text: 'we shipped it',
@@ -211,6 +215,22 @@ describe('sprints/', () => {
     await assertSucceeds(updateDoc(doc(alice(), 'sprints', SPRINT), { presenterId: ALICE }));
     await assertSucceeds(updateDoc(doc(alice(), 'sprints', SPRINT), { celebrating: true }));
     await assertSucceeds(updateDoc(doc(alice(), 'sprints', SPRINT), { summary: 'a summary' }));
+  });
+
+  // Every field the client actually writes, enumerated from the components.
+  // The first version of these rules allowed 'name', which nothing uses, and
+  // omitted 'title', so renaming a sprint was silently denied.
+  it('allows renaming, closing and highlighting', async () => {
+    await assertSucceeds(updateDoc(doc(alice(), 'sprints', SPRINT), { title: 'Sprint 2' }));
+    await assertSucceeds(updateDoc(doc(alice(), 'sprints', SPRINT), { isOpen: false }));
+    await assertSucceeds(
+      updateDoc(doc(alice(), 'sprints', SPRINT), { highlightedCardId: NOTE })
+    );
+  });
+
+  it('denies rewriting the team or creation date', async () => {
+    await assertFails(updateDoc(doc(alice(), 'sprints', SPRINT), { team: 'Tigers' }));
+    await assertFails(updateDoc(doc(alice(), 'sprints', SPRINT), { createdAt: new Date() }));
   });
 
   it('denies writing fields outside the allowlist', async () => {

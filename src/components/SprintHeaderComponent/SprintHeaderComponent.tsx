@@ -203,7 +203,12 @@ const SprintHeaderComponent = (props: ISprintNameComponentProps) => {
         {renderPresenterIndicator()}
       </div>
       <div className={styles.generateSummaryButton}>
-        {(!currentSprint?.summary && !currentSprint?.isOpen && isCurrentUserAdmin) && <AiSummaryButtonComponent sprintId={sprintId}/>}
+        {/*
+          Checks isOpen === false rather than !isOpen: currentSprint is
+          undefined until the snapshot arrives, and !undefined is true, which
+          made the button flash on every refresh of an open sprint.
+        */}
+        {(currentSprint && currentSprint.isOpen === false && !currentSprint.summary && isCurrentUserAdmin) && <AiSummaryButtonComponent sprintId={sprintId}/>}
       </div>
       {renderBackToHomeButton()}
       {currentSprint?.summary && renderSprintSummary()}
