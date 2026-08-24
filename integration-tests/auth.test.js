@@ -311,6 +311,49 @@ describe('syncUserClaims trigger', () => {
   });
 });
 
+describe('generateSummary is admin-only', () => {
+  const url = `http://127.0.0.1:5001/${PROJECT_ID}/us-central1/generateSummary`;
+
+  const post = (idToken) =>
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: 'https://www.sprintecho.com',
+        ...(idToken ? { Authorization: `Bearer ${idToken}` } : {})
+      },
+      body: JSON.stringify({ prompt: 'summarise this' })
+    });
+
+  it('rejects a request with no token', async () => {
+    const res = await post(null);
+    assert.equal(res.status, 401);
+  });
+
+  it('answers 401, not 500, for a malformed token', async () => {
+    const res = await post('not-a-real-token');
+    assert.equal(res.status, 401);
+  });
+
+  it('rejects a signed-in non-admin', async () => {
+    const credential = await signInAs(ALICE_EMAIL);
+    const res = await post(await credential.user.getIdToken());
+
+    // The UI hides the button, but the endpoint is what actually has to refuse.
+    assert.equal(res.status, 403);
+  });
+
+  it('lets an admin past the gate', async () => {
+    const credential = await signInAs(ADMIN_EMAIL);
+    const res = await post(await credential.user.getIdToken());
+
+    // Deliberately not asserting 200: getting past the gate means it goes on to
+    // call OpenAI, which has no usable key in the emulator. Anything other than
+    // 401/403 proves the authorisation check passed.
+    assert.ok(res.status !== 401 && res.status !== 403, `unexpected ${res.status}`);
+  });
+});
+
 describe('temp-password flag', () => {
   it('can be cleared by its owner through the rules, no function needed', async () => {
     await signInAs(ADMIN_EMAIL);

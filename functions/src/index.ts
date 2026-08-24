@@ -38,8 +38,26 @@ export const generateSummary = onRequest(
       }
 
       // Verify Firebase Auth ID token
+      // Verified separately from the work below so that a bad or expired token
+      // answers 401 rather than falling through to the catch-all 500, which
+      // would tell the user "server error" when they simply need to sign in.
       const idToken = authHeader.split("Bearer ")[1];
-      await authAdmin.verifyIdToken(idToken);
+      let token;
+      try {
+        token = await authAdmin.verifyIdToken(idToken);
+      } catch {
+        res.status(401).send("Unauthorized: invalid or expired token");
+        return;
+      }
+
+      // The button is already hidden for non-admins, but that is only cosmetic:
+      // any signed-in user could POST here with their own ID token, and every
+      // call spends money at OpenAI. The claim is the actual gate.
+      if (token.isAdmin !== true) {
+        logger.warn("Rejected non-admin summary request", { uid: token.uid });
+        res.status(403).send("Forbidden: admins only");
+        return;
+      }
 
       // Extract prompt and make OpenAI API call
       const { prompt } = req.body;
