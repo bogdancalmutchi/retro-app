@@ -1,14 +1,19 @@
 import * as React from 'react';
-import { collection, doc, getDocs, updateDoc } from 'firebase/firestore';
-import bcrypt from 'bcryptjs';
+import { collection, getDocs } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { useEffect, useState } from 'react';
 import { Button, Flex, Modal, Table, TextInput } from '@mantine/core';
 import { IconClockShield } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { db } from '../../firebase';
+import { db, functions } from '../../firebase';
 
 import styles from './AdminPageComponent.module.scss';
+
+const setTempPasswordCallable = httpsCallable<
+  { uid: string; tempPassword: string },
+  { ok: boolean }
+>(functions, 'setTempPassword');
 
 interface IAdminPageComponentProps {
   // Define props here
@@ -22,6 +27,7 @@ const AdminPageComponent = (props: IAdminPageComponentProps) => {
   const [users, setUsers] = useState<any[]>([]);
   const [isTempPasswordModalOpen, setIsTempPasswordModalOpen] = useState(false);
   const [tempPassword, setTempPassword] = useState<string>('');
+  const [tempPasswordError, setTempPasswordError] = useState<string>('');
   const [manipulatedUser, setManipulatedUser] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -46,24 +52,30 @@ const AdminPageComponent = (props: IAdminPageComponentProps) => {
   }, []);
 
   const setTempPasswordHash = async () => {
-    const hash = await bcrypt.hash(tempPassword, 10);
-    const userRef = doc(db, 'users', manipulatedUser.id);
+    const targetId = manipulatedUser.id;
+    const chosenPassword = tempPassword;
 
     setTempPassword('');
     setIsTempPasswordModalOpen(false);
+    setTempPasswordError('');
 
-    await updateDoc(userRef, {
-      hasTempPassword: true,
-      passwordHash: hash
-    });
+    try {
+      // Hashing and writing happen in the setTempPassword function: the
+      // browser is no longer allowed to touch a password hash.
+      await setTempPasswordCallable({ uid: targetId, tempPassword: chosenPassword });
 
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === manipulatedUser.id
-          ? { ...user, hasTempPassword: true }
-          : user
-      )
-    );
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === targetId
+            ? { ...user, hasTempPassword: true }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Error setting temporary password:', error);
+      setTempPasswordError((error as { message?: string })?.message ?? 'Could not set the password.');
+      setIsTempPasswordModalOpen(true);
+    }
   }
 
   const renderModalBody = () => {
@@ -72,6 +84,8 @@ const AdminPageComponent = (props: IAdminPageComponentProps) => {
         <TextInput
           label={`Set Temporary Password for ${manipulatedUser.email}`}
           value={tempPassword}
+          error={tempPasswordError}
+          onFocus={() => setTempPasswordError('')}
           onChange={(event) => setTempPassword(event.currentTarget.value)}
         />
         <Flex justify='flex-end'>

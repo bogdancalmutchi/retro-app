@@ -1,17 +1,15 @@
 import { onRequest } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import fetch from "node-fetch";
-import * as admin from "firebase-admin";
 import { defineSecret } from "firebase-functions/params";
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
+import { authAdmin } from "./firebaseAdmin";
+import { allowedOrigins } from "./config";
+
+export { setTempPassword, signup, syncUserClaims } from "./auth";
 
 // Secret for OpenAI key
 const openAiKey = defineSecret("OPENAI_API_KEY");
-
-// Define allowed frontend origins
-const allowedOrigins = ["http://localhost:5173", "https://sprintecho.com", "https://www.sprintecho.com"];
 
 export const generateSummary = onRequest(
   { secrets: [openAiKey] },
@@ -41,7 +39,7 @@ export const generateSummary = onRequest(
 
       // Verify Firebase Auth ID token
       const idToken = authHeader.split("Bearer ")[1];
-      await admin.auth().verifyIdToken(idToken);
+      await authAdmin.verifyIdToken(idToken);
 
       // Extract prompt and make OpenAI API call
       const { prompt } = req.body;

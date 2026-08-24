@@ -4,12 +4,10 @@ import { doc, updateDoc } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 import { notifications } from '@mantine/notifications';
 import { IconConfetti } from '@tabler/icons-react';
-import Cookies from 'js-cookie';
 
 import { useUser } from '../../../contexts/UserContext';
 import { db } from '../../../firebase';
 import { randomInRange } from '../../../utils/utils';
-import { cookieLifetime } from '../../../utils/LocalStorage';
 
 import styles from './ConfettiCanvas.module.scss';
 
@@ -131,7 +129,6 @@ const ConfettiCanvas = () => {
         await updateDoc(userRef, {
           canParty: true
         });
-        Cookies.set('canParty', JSON.stringify(true), { expires: cookieLifetime, path: '/' });
         setCanParty(true);
         renderNotification();
         setInputSequence([]); // Reset the sequence after triggering

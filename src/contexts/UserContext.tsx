@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import Cookies from 'js-cookie';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { onIdTokenChanged } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore';
+
+import { auth, db } from '../firebase';
 
 interface UserContextType {
   userId: string | null;
@@ -11,6 +12,8 @@ interface UserContextType {
   canParty: boolean;
   isAdmin: boolean;
   hasTempPassword: boolean;
+  /** True until the Firebase session has been resolved on first load. */
+  loading: boolean;
   setUserId: (id: string | null) => void;
   setDisplayName: (name: string | null) => void;
   setEmail: (email: string | null) => void;
@@ -30,43 +33,58 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [canParty, setCanParty] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [hasTempPassword, setHasTempPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // Identity comes from the Firebase session, never from a cookie. Setting a
+  // cookie in devtools used to be enough to impersonate anyone; now the uid is
+  // whatever the signed ID token says it is.
   useEffect(() => {
-    const storedUserId = Cookies.get('userId') || null;
-    const storedDisplayName = Cookies.get('displayName') || null;
-    const storedEmail = Cookies.get('email') || null;
-    const storedTeam = Cookies.get('userTeam') || null;
-    const storedCanParty = Cookies.get('canParty') === 'true';
-    setUserId(storedUserId);
-    setDisplayName(storedDisplayName);
-    setEmail(storedEmail);
-    setTeam(storedTeam);
-    setCanParty(storedCanParty);
+    // onIdTokenChanged rather than onAuthStateChanged so that a refreshed
+    // token, and therefore a changed role claim, is picked up too.
+    return onIdTokenChanged(auth, async (user) => {
+      if (!user) {
+        setUserId(null);
+        setDisplayName(null);
+        setEmail(null);
+        setTeam(null);
+        setCanParty(false);
+        setIsAdmin(false);
+        setHasTempPassword(false);
+        setLoading(false);
+        return;
+      }
 
-    // If userId exists, fetch the user document to check if the user is an admin
-    if (storedUserId) {
-      const fetchUserAdminStatus = async () => {
-        try {
-          const userRef = doc(db, 'users', storedUserId);
-          const userDoc = await getDoc(userRef);
+      const { claims } = await user.getIdTokenResult();
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setIsAdmin(userData?.isAdmin || false); // Set isAdmin based on Firestore data
-          }
-        } catch (error) {
-          console.error('Error fetching user admin status:', error);
-        }
-      };
-
-      fetchUserAdminStatus();
-    }
+      setUserId(user.uid);
+      // The role is read from the signed token, not from the user document,
+      // so it cannot be granted by writing to Firestore.
+      setIsAdmin(claims.isAdmin === true);
+      setLoading(false);
+    });
   }, []);
+
+  // Profile fields stay live, so a rename or the confetti unlock shows up
+  // without a reload.
+  useEffect(() => {
+    if (!userId) return;
+
+    return onSnapshot(doc(db, 'users', userId), (snapshot) => {
+      const data = snapshot.data();
+      if (!data) return;
+
+      setDisplayName(data.displayName ?? null);
+      setEmail(data.email ?? null);
+      setTeam(data.team ?? null);
+      setCanParty(data.canParty === true);
+      setHasTempPassword(data.hasTempPassword === true);
+    });
+  }, [userId]);
 
   return (
     <UserContext.Provider value={
       {
-        userId, displayName, email, team, canParty, isAdmin, hasTempPassword,
+        userId, displayName, email, team, canParty, isAdmin, hasTempPassword, loading,
         setUserId, setDisplayName, setEmail, setTeam, setCanParty, setIsAdmin, setHasTempPassword
       }
     }>

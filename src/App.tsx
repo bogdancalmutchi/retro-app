@@ -4,14 +4,13 @@ import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
-import Cookies from 'js-cookie';
 
 import { SprintProvider } from './contexts/SprintContext';
 import SprintBoardComponent from './components/SprintBoardComponent';
 import HomePageComponent from './components/HomePageComponent/HomePageComponent';
 import AuthPageComponent from './components/AuthPageComponent/AuthPageComponent';
 import ProtectedRoute from './contexts/ProtectedRoute';
-import { UserProvider } from './contexts/UserContext';
+import { UserProvider, useUser } from './contexts/UserContext';
 import GlobalHeaderWrapper from './components/wrappers/GlobalHeaderWrapper/GlobalHeaderWrapper';
 import ConfettiCanvas from './components/shared/ConfettiCanvas/ConfettiCanvas';
 import AdminPageComponent from './components/AdminPageComponent/AdminPageComponent';
@@ -71,18 +70,15 @@ const App = () => {
 
 const NotFoundRedirect = () => {
   const navigate = useNavigate();
+  const { userId, loading } = useUser();
 
-  // Check if the user is logged in by looking for a valid cookie (UUID or user ID)
-  const userId = Cookies.get('userId');
-
-  // Redirect to the homepage if logged in, otherwise to the auth page
+  // Redirect to the homepage if signed in, otherwise to the auth page. Waits
+  // for the Firebase session to resolve so a reload does not bounce a
+  // signed-in user to /auth.
   React.useEffect(() => {
-    if (userId) {
-      navigate('/');
-    } else {
-      navigate('/auth');
-    }
-  }, [navigate, userId]);
+    if (loading) return;
+    navigate(userId ? '/' : '/auth');
+  }, [navigate, userId, loading]);
 
   return null;
 };
