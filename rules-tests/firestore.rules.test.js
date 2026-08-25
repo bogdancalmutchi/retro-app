@@ -32,11 +32,23 @@ const NOTE = 'note-1';
 
 let testEnv;
 
+// Real ID tokens always carry auth_time, and the rules require a recent one, so
+// every context here has to supply it.
+const nowSeconds = () => Math.floor(Date.now() / 1000);
+const signedIn = (uid, extra = {}) =>
+  testEnv.authenticatedContext(uid, { auth_time: nowSeconds(), ...extra }).firestore();
+
 // Signed out, ordinary user, and admin-with-claim.
 const anon = () => testEnv.unauthenticatedContext().firestore();
-const alice = () => testEnv.authenticatedContext(ALICE).firestore();
-const bob = () => testEnv.authenticatedContext(BOB).firestore();
-const admin = () => testEnv.authenticatedContext('admin-uuid', { isAdmin: true }).firestore();
+const alice = () => signedIn(ALICE);
+const bob = () => signedIn(BOB);
+const admin = () => signedIn('admin-uuid', { isAdmin: true });
+
+// Signed in five hours ago, past the four-hour ceiling.
+const staleSession = () => signedIn(ALICE, { auth_time: nowSeconds() - 5 * 60 * 60 });
+
+// A token with no auth_time at all: must fail closed, not open.
+const noAuthTime = () => testEnv.authenticatedContext(ALICE, {}).firestore();
 
 // A session from Firebase's anonymous provider. Anonymous sign-in is enabled on
 // this project, so this is something an outsider can actually obtain with only
@@ -44,6 +56,7 @@ const admin = () => testEnv.authenticatedContext('admin-uuid', { isAdmin: true }
 const anonymousProvider = () =>
   testEnv
     .authenticatedContext('drive-by-uuid', {
+      auth_time: nowSeconds(),
       firebase: { sign_in_provider: 'anonymous', identities: {} }
     })
     .firestore();
@@ -126,6 +139,24 @@ describe('anonymous sessions are not enough', () => {
         order: 0
       })
     );
+  });
+});
+
+describe('sessions expire', () => {
+  it('allows a recently signed-in user', async () => {
+    await assertSucceeds(getDoc(doc(alice(), 'users', ALICE)));
+  });
+
+  it('denies reads and writes once the session is too old', async () => {
+    await assertFails(getDoc(doc(staleSession(), 'users', ALICE)));
+    await assertFails(getDoc(doc(staleSession(), 'sprints', SPRINT)));
+    await assertFails(
+      updateDoc(doc(staleSession(), 'users', ALICE), { displayName: 'Stale' })
+    );
+  });
+
+  it('denies a token with no auth_time claim', async () => {
+    await assertFails(getDoc(doc(noAuthTime(), 'users', ALICE)));
   });
 });
 

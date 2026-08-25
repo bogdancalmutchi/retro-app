@@ -19,9 +19,22 @@ service cloud.firestore {
     // mint an anonymous session. Excluding that one provider is deliberate
     // rather than pinning 'password', so enabling corporate SSO later does not
     // silently lock everybody out.
+    // Hard ceiling on session length, enforced by the database rather than by
+    // the browser. auth_time records the last real sign-in and does NOT advance
+    // when the ID token is refreshed, so a forgotten session cannot live
+    // forever. Read with a default of 0 so a token missing the claim fails
+    // closed rather than open.
+    //
+    // 4 hours. Keep in step with SESSION_MAX_AGE_MS in src/utils/session.ts.
+    function sessionIsFresh() {
+      return request.auth.token.get('auth_time', 0) * 1000
+             > request.time.toMillis() - 14400000;
+    }
+
     function isSignedIn() {
       return request.auth != null
-             && request.auth.token.firebase.sign_in_provider != 'anonymous';
+             && request.auth.token.firebase.sign_in_provider != 'anonymous'
+             && sessionIsFresh();
     }
 
     function isSelf(uid) {

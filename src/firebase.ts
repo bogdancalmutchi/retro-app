@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { browserSessionPersistence, getAuth, setPersistence } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
@@ -18,4 +18,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-export { app, auth, db, functions };
+// Sessions live in sessionStorage rather than localStorage, so closing the
+// browser signs the user out. The default persistence keeps someone signed in
+// indefinitely, which is not what you want on a shared machine.
+//
+// Awaited before signing in (see AuthPageComponent) so a sign-in can never be
+// stored under the previous persistence.
+const authPersistenceReady = setPersistence(auth, browserSessionPersistence).catch((error) => {
+  // Private browsing modes can block storage. Falling back to the default is
+  // better than refusing to let anyone log in.
+  console.error('Could not set session persistence:', error);
+});
+
+export { app, auth, authPersistenceReady, db, functions };

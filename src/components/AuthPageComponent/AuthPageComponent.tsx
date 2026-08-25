@@ -6,7 +6,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
 
-import { auth, db, functions } from '../../firebase';
+import { auth, authPersistenceReady, db, functions } from '../../firebase';
 import LowPolyBackgroundComponent from '../shared/LowPolyBackgroundComponent/LowPolyBackgroundComponent';
 import AnimatedAppLogoComponent from '../shared/AppLogoComponent/AnimatedAppLogoComponent';
 
@@ -111,6 +111,7 @@ const AuthPageComponent = () => {
     setLoginError('');
 
     try {
+      await authPersistenceReady;
       const credential = await signInWithEmailAndPassword(
         auth,
         loginEmailInput,
@@ -148,6 +149,7 @@ const AuthPageComponent = () => {
       });
 
       // The account exists now; sign in with it the ordinary way.
+      await authPersistenceReady;
       await signInWithEmailAndPassword(auth, signupEmailInput, signupPasswordInput);
       goToApp(data.team);
     } catch (error) {

@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onIdTokenChanged } from 'firebase/auth';
+import { onIdTokenChanged, signOut } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
 import { auth, db } from '../firebase';
+import { SESSION_MAX_AGE_MS } from '../utils/session';
 
 interface UserContextType {
   userId: string | null;
@@ -55,6 +56,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { claims } = await user.getIdTokenResult();
+
+      // The rules refuse a session older than this, so sign out rather than let
+      // the app run into permission errors it cannot explain. auth_time is the
+      // last real sign-in and does not move when the token refreshes, and this
+      // callback runs on every refresh, so an expired session is caught within
+      // an hour of the ceiling.
+      const authTimeMs = Number(claims.auth_time) * 1000;
+      if (authTimeMs && Date.now() - authTimeMs > SESSION_MAX_AGE_MS) {
+        await signOut(auth);
+        return;
+      }
 
       setUserId(user.uid);
       // The role is read from the signed token, not from the user document,
