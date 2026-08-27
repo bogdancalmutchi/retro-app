@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:emulators": "VITE_USE_EMULATORS=true vite",
+    "dev:local": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"npm run seed && npm run dev:emulators\"",
     "emulators": "firebase emulators:start --only auth,firestore",
     "emulators:all": "npm --prefix functions run build && firebase emulators:start --only auth,firestore,functions",
     "seed": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=retro-app-a95ca node functions/scripts/seed.js",
