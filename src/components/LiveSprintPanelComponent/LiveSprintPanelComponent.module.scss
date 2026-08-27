@@ -1,0 +1,162 @@
+@use '../../scss/global/variables' as *;
+
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 152px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 28px 34px -7px rgba(0, 0, 0, 0.06), 0 12px 12px -7px rgba(0, 0, 0, 0.04);
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px 40px;
+  overflow: hidden;
+}
+
+.heroAccent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: $baseColorDark;
+}
+
+.heroMain {
+  flex: 1 1 240px;
+  min-width: 240px;
+}
+
+.heroHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  & > * {
+    flex: none;
+  }
+}
+
+.heroLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $baseColorDark;
+  white-space: nowrap;
+}
+
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: $baseColorDark;
+  animation: pulse 2.4s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 110, 245, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 110, 245, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 110, 245, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+.heroTitle {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroMeta {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #868e96;
+  white-space: nowrap;
+}
+
+.heroCounters {
+  display: flex;
+  gap: 44px;
+  flex: none;
+
+  @media (min-width: 1264px) {
+    padding-left: 44px;
+    border-left: 1px solid #e9ecef;
+  }
+}
+
+.heroLabel,
+.heroNum {
+  white-space: nowrap;
+}
+
+.heroNum {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.heroLabel {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.heroEmpty {
+  width: 100%;
+  min-height: 152px;
+  border: 1px dashed #ced4da;
+  border-radius: 8px;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px 32px;
+}
+
+.good {
+  color: $goodItemColorVividDark;
+}
+
+.bad {
+  color: $badItemColorVivid;
+}
+
+.action {
+  color: $actionItemColorVivid;
+}

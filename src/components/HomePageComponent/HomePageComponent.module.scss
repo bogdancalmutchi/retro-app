@@ -1,6 +1,62 @@
-.boardContainer {
+.page {
+  padding: 16px;
+}
+
+.block {
+  margin-inline: auto;
+  max-width: 300px;
+
+  @media (min-width: 632px) {
+    max-width: 616px;
+  }
+
+  @media (min-width: 948px) {
+    max-width: 932px;
+  }
+
+  @media (min-width: 1264px) {
+    max-width: 1248px;
+  }
+}
+
+.toolbar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 300px);
+  justify-content: start;
+  gap: 16px;
+}
+
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 16px;
+}
+
+.dividerLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #868e96;
+}
+
+.dividerCount {
+  font-size: 12px;
+  color: #adb5bd;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e9ecef;
 }
