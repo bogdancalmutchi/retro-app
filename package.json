@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:emulators": "VITE_USE_EMULATORS=true vite",
+    "emulators": "firebase emulators:start --only auth,firestore",
+    "emulators:all": "npm --prefix functions run build && firebase emulators:start --only auth,firestore,functions",
+    "seed": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=retro-app-a95ca node functions/scripts/seed.js",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
@@ -12,6 +16,7 @@
     "test:rules": "firebase emulators:exec --only firestore \"node --test --test-reporter=spec rules-tests/*.test.js\"",
     "test:auth": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-reporter=spec integration-tests/*.test.js\"",
     "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:indexes": "firebase deploy --only firestore:indexes",
     "test": "npm run test:rules && npm run test:auth && npm run test:migrate",
     "migrate": "node functions/scripts/migrate.js",
     "test:migrate": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-reporter=spec migration-tests/*.test.js\""

@@ -37,3 +37,46 @@ back to. Sprints belong to a team, so different teams keep their own boards.
 Sign up with your work email address and pick your team. If an admin has given
 you a temporary password, you'll be asked to choose your own the first time you
 sign in.
+
+## Running it locally
+
+By default `npm run dev` talks to the **live** Firebase project, so anything you
+create or close there lands on real retros. To work against local emulators with
+throwaway data instead, use two terminals:
+
+```bash
+npm run emulators          # auth on 9099, firestore on 8080
+npm run seed               # throwaway users, sprints and notes
+npm run dev:emulators      # the app, pointed at the emulators
+```
+
+`npm run seed` refuses to run unless the emulator host variables are set, so it
+cannot touch production. It is safe to re-run — it deletes what it previously
+created first. It prints the accounts it made; they all share the password
+`retro-local-pass`.
+
+The seeded data is shaped to reach the states that are otherwise awkward to
+produce: team Protoss gets one open sprint plus fourteen closed ones (two pages
+of archive), one note is left unpublished so the draft padlock and Publish All
+are reachable, and team Tigers is left with no sprints at all for the empty
+state.
+
+Use `npm run emulators:all` instead if you need the Cloud Functions too — signup,
+temporary passwords, or the AI summary. It builds `functions/` first.
+
+**The emulator does not enforce composite indexes.** A query that needs one will
+run fine locally and fail in production with `FAILED_PRECONDITION`, so when you
+add or change a `where` clause, add the index to `firestore.indexes.json`, run
+`npm run deploy:indexes`, and wait for it to report Enabled before deploying the
+app.
+
+## Deploying
+
+```bash
+npm run deploy:indexes     # if firestore.indexes.json changed — wait for Enabled
+npm run deploy:rules       # if firestore.rules changed
+npm run deploy             # builds and publishes to gh-pages
+```
+
+Indexes and rules are not deployed by CI, and index builds are asynchronous —
+ship them before the bundle that depends on them.
