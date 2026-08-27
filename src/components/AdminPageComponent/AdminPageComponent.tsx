@@ -2,11 +2,12 @@ import * as React from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { useEffect, useState } from 'react';
-import { Button, Flex, Modal, Table, TextInput } from '@mantine/core';
+import { Button, Flex, Modal, Table, TextInput, Title } from '@mantine/core';
 import { IconClockShield } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { db, functions } from '../../firebase';
+import InviteSectionComponent from './InviteSectionComponent';
 
 import styles from './AdminPageComponent.module.scss';
 
@@ -143,6 +144,7 @@ const AdminPageComponent = (props: IAdminPageComponentProps) => {
   return (
     <>
       {renderTempPasswordModal()}
+      <Title order={2} fz='h4' mb='sm'>Users</Title>
       <Table striped highlightOnHover verticalSpacing='sm'>
         <Table.Thead>
           <Table.Tr>
@@ -155,6 +157,7 @@ const AdminPageComponent = (props: IAdminPageComponentProps) => {
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
       </Table>
+      <InviteSectionComponent />
     </>
   );
 };

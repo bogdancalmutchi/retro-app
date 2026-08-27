@@ -81,7 +81,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'users', ALICE), {
       id: ALICE,
       displayName: 'Alice',
-      email: 'alice@intralinks.com',
+      email: 'alice@example.com',
       team: 'core',
       canParty: false,
       isAdmin: false,
@@ -90,7 +90,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'users', BOB), {
       id: BOB,
       displayName: 'Bob',
-      email: 'bob@intralinks.com',
+      email: 'bob@example.com',
       team: 'core',
       canParty: false,
       isAdmin: false,
@@ -348,6 +348,17 @@ describe('sprints/{id}/items/', () => {
   it('lets the author or an admin delete, but not a bystander', async () => {
     await assertFails(deleteDoc(doc(bob(), 'sprints', SPRINT, 'items', NOTE)));
     await assertSucceeds(deleteDoc(doc(alice(), 'sprints', SPRINT, 'items', NOTE)));
+  });
+});
+
+describe('invites/', () => {
+  it('are invisible and unwritable to every client, admins included', async () => {
+    for (const as of [anon, alice, admin]) {
+      await assertFails(getDoc(doc(as(), 'invites', 'some-hash')));
+      await assertFails(getDocs(collection(as(), 'invites')));
+      await assertFails(setDoc(doc(as(), 'invites', 'some-hash'), { email: 'x@y.com' }));
+      await assertFails(deleteDoc(doc(as(), 'invites', 'some-hash')));
+    }
   });
 });
 

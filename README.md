@@ -34,19 +34,39 @@ back to. Sprints belong to a team, so different teams keep their own boards.
 
 ## Getting an account
 
-Sign up with your work email address and pick your team. If an admin has given
-you a temporary password, you'll be asked to choose your own the first time you
-sign in.
+SprintEcho is invite only. An admin sends you a link, you follow it, pick your
+own password, and you're in — the password is never chosen for you and never
+travels over chat.
+
+Invite links are single use and expire after seven days. Only a hash of the link
+is stored, so it cannot be shown again after it is created; a lost link means
+revoking it and issuing a new one.
+
+If an admin has instead reset your password for you, you'll be asked to choose
+your own the first time you sign in.
 
 ## Running it locally
 
 By default `npm run dev` talks to the **live** Firebase project, so anything you
 create or close there lands on real retros. To work against local emulators with
-throwaway data instead, use two terminals:
+throwaway data instead:
+
+```bash
+npm run dev:local
+```
+
+That one command builds the functions, starts the auth, firestore and functions
+emulators, seeds them, and serves the app pointed at them. Stopping it with
+Ctrl-C shuts the emulators down too, which also discards the data — every run
+starts from the same fixture. Note that the emulators are wrapped in
+`emulators:exec`, so Vite's interactive keyboard shortcuts are not available.
+
+The steps are also available separately, in three terminals, when you want the
+emulators to outlive a restart of the app:
 
 ```bash
 npm run emulators          # auth on 9099, firestore on 8080
-npm run seed               # throwaway users, sprints and notes
+npm run seed               # throwaway users, sprints, notes and an invite
 npm run dev:emulators      # the app, pointed at the emulators
 ```
 
@@ -61,8 +81,15 @@ of archive), one note is left unpublished so the draft padlock and Publish All
 are reachable, and team Tigers is left with no sprints at all for the empty
 state.
 
-Use `npm run emulators:all` instead if you need the Cloud Functions too — signup,
-temporary passwords, or the AI summary. It builds `functions/` first.
+`npm run emulators` starts only auth and firestore. Use `npm run emulators:all`
+if you also need the Cloud Functions — invites, temporary passwords, or the AI
+summary. It builds `functions/` first. `dev:local` already includes them.
+
+There is no way to create the first admin through the app, by design: invites can
+only be issued by an existing admin. Bootstrapping a real environment means
+creating the Auth user and its `users/{uid}` document directly with `isAdmin:
+true`, then letting the `syncUserClaims` trigger push the claim. `functions/scripts/seed.js`
+does exactly that for the local fixture.
 
 **The emulator does not enforce composite indexes.** A query that needs one will
 run fine locally and fail in production with `FAILED_PRECONDITION`, so when you

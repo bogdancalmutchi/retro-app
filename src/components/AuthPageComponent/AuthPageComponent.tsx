@@ -3,21 +3,14 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { Button, Center, Flex, Group, Modal, Paper, Radio, TextInput } from '@mantine/core';
+import { Button, Center, Flex, Modal, Paper, TextInput } from '@mantine/core';
 
-import { auth, authPersistenceReady, db, functions } from '../../firebase';
+import { auth, authPersistenceReady, db } from '../../firebase';
+import { MIN_PASSWORD_LENGTH } from '../../utils/authForms';
 import LowPolyBackgroundComponent from '../shared/LowPolyBackgroundComponent/LowPolyBackgroundComponent';
 import AnimatedAppLogoComponent from '../shared/AppLogoComponent/AnimatedAppLogoComponent';
 
 import styles from './AuthPageComponent.module.scss';
-
-const MIN_PASSWORD_LENGTH = 10;
-
-const signupCallable = httpsCallable<
-  { displayName: string; email: string; password: string; team: string },
-  { ok: boolean; team: string }
->(functions, 'signup');
 
 /**
  * Firebase reports a wrong password and an unknown account with different codes
@@ -41,32 +34,10 @@ const signInMessage = (error: unknown) => {
   return 'Could not sign you in. Please try again.';
 };
 
-/**
- * Callable errors arrive as `functions/<code>` and their message is one we threw
- * deliberately, so it is safe to show. Transport failures (a blocked request, a
- * cold start timing out) instead surface as a bare code like "internal", which
- * means nothing to a user, so those fall back to a readable sentence.
- */
-const OPAQUE_CALLABLE_ERRORS = ['internal', 'unavailable', 'deadline-exceeded', 'cancelled'];
-
-const callableMessage = (error: unknown, fallback: string) => {
-  const message = (error as { message?: string })?.message?.trim();
-  if (!message || OPAQUE_CALLABLE_ERRORS.includes(message.toLowerCase())) {
-    return fallback;
-  }
-  return message;
-};
-
 const AuthPageComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.from?.pathname + location.state?.from?.search || '/';
-
-  const [signupEmailInput, setSignupEmailInput] = useState('');
-  const [signupPasswordInput, setSignupPasswordInput] = useState('');
-  const [signupDisplayName, setSignupDisplayName] = useState('');
-  const [signupTeam, setSignupTeam] = useState('');
-  const [signupError, setSignupError] = useState('');
 
   const [loginEmailInput, setLoginEmailInput] = useState('');
   const [loginPasswordInput, setLoginPasswordInput] = useState('');
@@ -76,26 +47,8 @@ const AuthPageComponent = () => {
   const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [newPasswordError, setNewPasswordError] = useState('');
 
-  const [isSignupModalRendered, setIsSignupModalRendered] = useState(false);
-  const [isLoginModalRendered, setIsLoginModalRendered] = useState(false);
   const [isNewPasswordModalRendered, setIsNewPasswordModalRendered] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
-
-  const resetLoginModalState = () => {
-    setIsLoginModalRendered(false);
-    setLoginEmailInput('');
-    setLoginPasswordInput('');
-    setLoginError('');
-  };
-
-  const resetSignupModalState = () => {
-    setIsSignupModalRendered(false);
-    setSignupDisplayName('');
-    setSignupEmailInput('');
-    setSignupPasswordInput('');
-    setSignupTeam('');
-    setSignupError('');
-  };
 
   const goToApp = (team: string | null, path: string = '/') => {
     const url = new URL(window.location.origin + path);
@@ -123,7 +76,6 @@ const AuthPageComponent = () => {
 
       if (data?.hasTempPassword) {
         // Signed in on a password an admin chose. Force a change first.
-        setIsLoginModalRendered(false);
         setIsNewPasswordModalRendered(true);
         return;
       }
@@ -131,29 +83,6 @@ const AuthPageComponent = () => {
       goToApp(data?.team ?? null, redirectPath);
     } catch (error) {
       setLoginError(signInMessage(error));
-    } finally {
-      setIsBusy(false);
-    }
-  };
-
-  const onSignup = async () => {
-    setIsBusy(true);
-    setSignupError('');
-
-    try {
-      const { data } = await signupCallable({
-        displayName: signupDisplayName,
-        email: signupEmailInput,
-        password: signupPasswordInput,
-        team: signupTeam
-      });
-
-      // The account exists now; sign in with it the ordinary way.
-      await authPersistenceReady;
-      await signInWithEmailAndPassword(auth, signupEmailInput, signupPasswordInput);
-      goToApp(data.team);
-    } catch (error) {
-      setSignupError(callableMessage(error, 'Could not create your account.'));
     } finally {
       setIsBusy(false);
     }
@@ -199,114 +128,6 @@ const AuthPageComponent = () => {
     } finally {
       setIsBusy(false);
     }
-  };
-
-  const renderSignupModal = () => {
-    const isInputEmpty =
-      !signupDisplayName.trim().length ||
-      !signupEmailInput.trim().length ||
-      !signupPasswordInput.trim().length ||
-      !signupTeam;
-
-    return (
-      <Modal
-        centered
-        title='Create new user'
-        opened={isSignupModalRendered}
-        onClose={resetSignupModalState}
-      >
-        <Flex direction='column' gap='md'>
-          <TextInput
-            data-autofocus
-            label='Name'
-            placeholder='Name'
-            maxLength={40}
-            value={signupDisplayName}
-            withAsterisk
-            onChange={(event) => setSignupDisplayName(event.currentTarget.value)}
-          />
-          <TextInput
-            label='Email'
-            placeholder='e-mail'
-            value={signupEmailInput}
-            error={signupError}
-            withAsterisk
-            onFocus={() => setSignupError('')}
-            onChange={(event) => setSignupEmailInput(event.currentTarget.value.trim().toLowerCase())}
-          />
-          <TextInput
-            label='Password'
-            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
-            value={signupPasswordInput}
-            type='password'
-            maxLength={128}
-            withAsterisk
-            onChange={(event) => setSignupPasswordInput(event.currentTarget.value)}
-          />
-          <Radio.Group
-            name='team'
-            label='Select Team'
-            value={signupTeam}
-            onChange={setSignupTeam}
-            withAsterisk
-          >
-            <Group mt='xs'>
-              <Radio value='Protoss' label='Protoss' />
-              <Radio value='Tigers' label='Tigers' />
-            </Group>
-          </Radio.Group>
-          <Flex justify='flex-end'>
-            <Button onClick={onSignup} loading={isBusy} disabled={isInputEmpty}>
-              Create
-            </Button>
-          </Flex>
-        </Flex>
-      </Modal>
-    );
-  };
-
-  const renderLoginModal = () => {
-    const isInputEmpty = !loginEmailInput.trim().length || !loginPasswordInput.trim().length;
-
-    return (
-      <Modal
-        centered
-        title='Login'
-        opened={isLoginModalRendered}
-        onClose={resetLoginModalState}
-      >
-        <Flex direction='column' gap='md'>
-          <TextInput
-            data-autofocus
-            label='Email'
-            placeholder='e-mail'
-            value={loginEmailInput}
-            onFocus={() => setLoginError('')}
-            onChange={(event) => setLoginEmailInput(event.currentTarget.value.trim().toLowerCase())}
-          />
-          <TextInput
-            label='Password'
-            placeholder='Password'
-            value={loginPasswordInput}
-            error={loginError}
-            type='password'
-            maxLength={128}
-            onFocus={() => setLoginError('')}
-            onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
-            onKeyDown={async (event) => {
-              if (event.key === 'Enter' && !isInputEmpty && !isBusy) {
-                await onLogin();
-              }
-            }}
-          />
-          <Flex justify='flex-end'>
-            <Button onClick={onLogin} loading={isBusy} disabled={isInputEmpty}>
-              Login
-            </Button>
-          </Flex>
-        </Flex>
-      </Modal>
-    );
   };
 
   const renderNewPasswordModal = () => {
@@ -362,26 +183,56 @@ const AuthPageComponent = () => {
   };
 
   const renderAuthPage = () => {
+    const isInputEmpty = !loginEmailInput.trim().length || !loginPasswordInput.trim().length;
+
     return (
-      <Center h='50vh'>
+      <Center h='70vh'>
         <Paper withBorder shadow='md' radius='md' p='xl' className={styles.authCard}>
           <AnimatedAppLogoComponent className={styles.logoContainer} />
-          <Group justify='center' align='center' gap={20}>
+          <Flex direction='column' gap='md'>
+            <TextInput
+              autoFocus
+              label='Email'
+              placeholder='e-mail'
+              type='email'
+              autoComplete='username'
+              value={loginEmailInput}
+              onFocus={() => setLoginError('')}
+              onChange={(event) => setLoginEmailInput(event.currentTarget.value.trim().toLowerCase())}
+              onKeyDown={async (event) => {
+                if (event.key === 'Enter' && !isInputEmpty && !isBusy) {
+                  await onLogin();
+                }
+              }}
+            />
+            <TextInput
+              label='Password'
+              placeholder='Password'
+              type='password'
+              autoComplete='current-password'
+              maxLength={128}
+              value={loginPasswordInput}
+              error={loginError}
+              onFocus={() => setLoginError('')}
+              onChange={(event) => setLoginPasswordInput(event.currentTarget.value)}
+              onKeyDown={async (event) => {
+                if (event.key === 'Enter' && !isInputEmpty && !isBusy) {
+                  await onLogin();
+                }
+              }}
+            />
             <Button
+              fullWidth
+              mt='xs'
               variant='gradient'
               gradient={{ from: 'indigo', to: 'cyan', deg: 45 }}
-              onClick={() => setIsLoginModalRendered(true)}
+              onClick={onLogin}
+              loading={isBusy}
+              disabled={isInputEmpty}
             >
               Login
             </Button>
-            <Button
-              variant='gradient'
-              gradient={{ from: 'cyan', to: 'indigo', deg: 45 }}
-              onClick={() => setIsSignupModalRendered(true)}
-            >
-              Signup
-            </Button>
-          </Group>
+          </Flex>
         </Paper>
       </Center>
     );
@@ -390,8 +241,6 @@ const AuthPageComponent = () => {
   return (
     <>
       <LowPolyBackgroundComponent />
-      {isSignupModalRendered && renderSignupModal()}
-      {isLoginModalRendered && renderLoginModal()}
       {isNewPasswordModalRendered && renderNewPasswordModal()}
       {renderAuthPage()}
     </>

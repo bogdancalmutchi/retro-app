@@ -6,7 +6,15 @@ import { defineSecret } from "firebase-functions/params";
 import { authAdmin } from "./firebaseAdmin";
 import { allowedOrigins } from "./config";
 
-export { setTempPassword, signup, syncUserClaims } from "./auth";
+export {
+  checkInvite,
+  createInvite,
+  listInvites,
+  redeemInvite,
+  revokeInvite,
+  setTempPassword,
+  syncUserClaims,
+} from "./auth";
 
 // Secret for OpenAI key
 const openAiKey = defineSecret("OPENAI_API_KEY");

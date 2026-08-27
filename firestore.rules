@@ -2,10 +2,9 @@ rules_version = '2';
 
 // SprintEcho Firestore rules.
 //
-// These rules assume every user has a real Firebase Auth session, which only
-// becomes true once login moves into the `login` Cloud Function and the client
-// calls signInWithCustomToken. Deploying them before that lands will lock out
-// every user who is not an @admin.com account.
+// These rules assume every user has a real Firebase Auth session, which they do:
+// sign-in is signInWithEmailAndPassword and accounts are created server-side by
+// the invite functions.
 //
 // Roles live in custom claims (request.auth.token.isAdmin), set server-side.
 // They are deliberately NOT read from the users document: a rule that reads
@@ -56,6 +55,13 @@ service cloud.firestore {
     // There is deliberately no password collection: Firebase Auth stores and
     // verifies passwords, so no hash exists anywhere in Firestore. Any path not
     // matched below is denied by default.
+
+    // Invites are handled only by the callable functions, which use the admin
+    // SDK and so bypass these rules. A readable invite hands out a working
+    // token; a writable one mints an account. The client gets neither.
+    match /invites/{tokenHash} {
+      allow read, write: if false;
+    }
 
     match /users/{uid} {
       // Single-profile reads are needed all over the app: presenter name in

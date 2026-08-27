@@ -16,6 +16,7 @@
  */
 
 const admin = require("firebase-admin");
+const { createHash, randomBytes } = require("node:crypto");
 
 if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST) {
   console.error(
@@ -110,7 +111,31 @@ const buildNotes = (authors, isOpenSprint) => {
   return notes;
 };
 
+const seedInvite = async () => {
+  const email = "erin@example.com";
+  const token = randomBytes(32).toString("base64url");
+  const now = Date.now();
+
+  await db.collection("invites").doc(createHash("sha256").update(token).digest("hex")).set({
+    email,
+    team: "Protoss",
+    createdBy: "seed-alice",
+    createdAt: new Date(now),
+    expiresAt: new Date(now + 7 * 24 * 60 * 60 * 1000),
+    usedAt: null,
+    revokedAt: null,
+    seeded: true,
+  });
+
+  return `http://localhost:5173/#/invite/${token}`;
+};
+
 const deleteSeeded = async () => {
+  const invites = await db.collection("invites").where("seeded", "==", true).get();
+  const batch = db.batch();
+  invites.docs.forEach((invite) => batch.delete(invite.ref));
+  await batch.commit();
+
   const sprints = await db.collection("sprints").where("seeded", "==", true).get();
   for (const sprint of sprints.docs) {
     const items = await sprint.ref.collection("items").get();
@@ -179,11 +204,14 @@ const seedSprints = async () => {
     await deleteSeeded();
     await seedUsers();
     await seedSprints();
+    const link = await seedInvite();
 
     console.log("\nDone. Sign in at http://localhost:5173 with:");
     USERS.forEach((user) => {
       console.log(`  ${user.email}  /  ${PASSWORD}${user.isAdmin ? "   (admin)" : ""}`);
     });
+    console.log("\nOr accept an invite as a brand new user:");
+    console.log(`  ${link}`);
   } catch (error) {
     console.error("Seeding failed:", error);
     process.exitCode = 1;

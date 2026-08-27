@@ -9,6 +9,7 @@ import { SprintProvider } from './contexts/SprintContext';
 import SprintBoardComponent from './components/SprintBoardComponent';
 import HomePageComponent from './components/HomePageComponent/HomePageComponent';
 import AuthPageComponent from './components/AuthPageComponent/AuthPageComponent';
+import InvitePageComponent from './components/InvitePageComponent/InvitePageComponent';
 import ProtectedRoute from './contexts/ProtectedRoute';
 import { UserProvider, useUser } from './contexts/UserContext';
 import GlobalHeaderWrapper from './components/wrappers/GlobalHeaderWrapper/GlobalHeaderWrapper';
@@ -26,6 +27,10 @@ const App = () => {
             <Routes>
               {/* No protection needed for the login page */}
               <Route path='/auth' element={<AuthPageComponent />} />
+
+              {/* Redeeming an invite is how an account comes to exist, so this
+                  one cannot be behind ProtectedRoute either. */}
+              <Route path='/invite/:token' element={<InvitePageComponent />} />
 
               {/* Protect all other routes */}
               <Route
