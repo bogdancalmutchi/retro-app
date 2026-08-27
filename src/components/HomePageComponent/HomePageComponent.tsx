@@ -2,10 +2,9 @@ import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Center, Pagination, Skeleton, Text } from '@mantine/core';
-import { collection, getDocs, query, orderBy, onSnapshot, where, limit } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where, limit } from 'firebase/firestore';
 
 import { db } from '../../firebase';
-import { INote } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import CreateSprintModalComponent from '../CreateSprintModalComponent/CreateSprintModalComponent';
 import CardComponent, { ISprint } from '../CardComponent/CardComponent';
 import LiveSprintPanelComponent from '../LiveSprintPanelComponent/LiveSprintPanelComponent';
@@ -15,16 +14,11 @@ import styles from './HomePageComponent.module.scss';
 const PAGE_SIZE = 8;
 const MAX_SPRINTS = 60;
 
-const itemsCache = new Map<string, INote[]>();
-
 const HomePageComponent = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedTeam = searchParams.get('team') || 'Protoss';
   const [sprints, setSprints] = useState<ISprint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [itemsBySprintId, setItemsBySprintId] = useState<Record<string, INote[]>>(
-    () => Object.fromEntries(itemsCache)
-  );
   const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
 
   useEffect(() => {
@@ -63,45 +57,6 @@ const HomePageComponent = () => {
     () => closedSprints.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [closedSprints, page]
   );
-  const visibleSprints = useMemo(
-    () => (openSprint ? [openSprint, ...pageSprints] : pageSprints),
-    [openSprint, pageSprints]
-  );
-  const pageKey = visibleSprints.map((sprint) => sprint.id).join(',');
-
-  useEffect(() => {
-    const stale = visibleSprints
-      .filter((sprint) => sprint.isOpen || !itemsCache.has(sprint.id))
-      .map((sprint) => sprint.id);
-    if (!stale.length) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const fetched = await Promise.all(
-          stale.map(async (id) => {
-            const itemsSnap = await getDocs(collection(db, 'sprints', id, 'items'));
-            const items = itemsSnap.docs.map((itemDoc) => ({
-              id: itemDoc.id,
-              ...itemDoc.data()
-            }) as INote);
-            return [id, items] as const;
-          })
-        );
-        if (cancelled) return;
-        fetched.forEach(([id, items]) => itemsCache.set(id, items));
-        setItemsBySprintId((previous) => ({ ...previous, ...Object.fromEntries(fetched) }));
-      } catch (error) {
-        console.error('Failed to load sprint notes:', error);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageKey]);
-
   const handlePageChange = (nextPage: number) => {
     const params: Record<string, string> = { team: selectedTeam };
     if (nextPage > 1) params.page = String(nextPage);
@@ -135,10 +90,7 @@ const HomePageComponent = () => {
   const renderGrid = () => (
     <div className={styles.grid}>
       {pageSprints.map((sprint) => (
-        <CardComponent
-          sprint={{ ...sprint, items: itemsBySprintId[sprint.id] }}
-          key={sprint.id}
-        />
+        <CardComponent sprint={sprint} key={sprint.id} />
       ))}
     </div>
   );
@@ -157,7 +109,6 @@ const HomePageComponent = () => {
         ) : (
           <LiveSprintPanelComponent
             sprint={openSprint}
-            items={openSprint ? itemsBySprintId[openSprint.id] : undefined}
             team={selectedTeam}
             onCreateSprint={() => setIsCreateSprintModalOpen(true)}
           />

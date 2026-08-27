@@ -7,17 +7,16 @@ import { IconDotsVertical, IconPlus, IconSquareRoundedX } from '@tabler/icons-re
 import { doc, updateDoc } from 'firebase/firestore';
 
 import { ISprint } from '../CardComponent/CardComponent';
-import { INote, NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
+import { NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import { db } from '../../firebase';
 import { useSprint } from '../../contexts/SprintContext';
 import { formatSprintDate } from '../../utils/utils';
-import { CATEGORY_DISPLAY, CATEGORY_ORDER, getCategoryCounts } from '../../utils/noteCategories';
+import { CATEGORY_DISPLAY, CATEGORY_ORDER } from '../../utils/noteCategories';
 
 import styles from './LiveSprintPanelComponent.module.scss';
 
 interface ILiveSprintPanelComponentProps {
   sprint?: ISprint;
-  items?: INote[];
   team: string;
   onCreateSprint: () => void;
 }
@@ -25,7 +24,6 @@ interface ILiveSprintPanelComponentProps {
 const LiveSprintPanelComponent = (props: ILiveSprintPanelComponentProps) => {
   const {
     sprint,
-    items,
     team,
     onCreateSprint
   } = props;
@@ -94,7 +92,7 @@ const LiveSprintPanelComponent = (props: ILiveSprintPanelComponentProps) => {
     );
   }
 
-  const categoryCounts = items ? getCategoryCounts(items) : null;
+  const categoryCounts = sprint.counts;
 
   return (
     <>

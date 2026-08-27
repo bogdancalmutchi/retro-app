@@ -5,10 +5,10 @@ import { Badge, Button, Flex, Group, Paper, Text, Tooltip } from '@mantine/core'
 import classNames from 'classnames';
 import { Timestamp } from 'firebase/firestore';
 
-import { INote, NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
+import { NoteCategory } from '../ThreeColumnsGridComponent/ThreeColumnsGridComponent';
 import { useSprint } from '../../contexts/SprintContext';
 import { formatSprintDate } from '../../utils/utils';
-import { CATEGORY_DISPLAY, CATEGORY_ORDER, getCategoryCounts } from '../../utils/noteCategories';
+import { CATEGORY_DISPLAY, CATEGORY_ORDER } from '../../utils/noteCategories';
 
 import styles from './CardComponent.module.scss';
 
@@ -17,7 +17,9 @@ export interface ISprint {
   title: string;
   team: string;
   isOpen: boolean;
-  items?: INote[];
+  // Published notes per category, maintained by the syncSprintCounts trigger so
+  // the list does not have to read every note of every sprint on screen.
+  counts?: Record<string, number>;
   summary: string;
   createdAt?: Timestamp;
 }
@@ -29,7 +31,7 @@ interface ICardComponentProps {
 const CardComponent = ({ sprint }: ICardComponentProps) => {
   const navigate = useNavigate();
   const { setSprintId } = useSprint();
-  const categoryCounts = sprint.items ? getCategoryCounts(sprint.items) : null;
+  const categoryCounts = sprint.counts;
 
   const sprintNameRef = useRef<HTMLDivElement>(null);
   const [truncated, setTruncated] = useState(false);
