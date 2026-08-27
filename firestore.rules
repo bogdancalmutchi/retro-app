@@ -71,8 +71,8 @@ service cloud.firestore {
       // Enumerating every profile is only the admin page's job.
       allow list: if isAdmin();
 
-      // Profiles are provisioned server-side, so that isAdmin, email, team
-      // and passwordHash can never be chosen by the client.
+      // Profiles are provisioned server-side, so that isAdmin, email and team
+      // can never be chosen by the client.
       allow create, delete: if false;
 
       // A user may rename themselves, unlock the confetti easter egg, and clear

@@ -102,10 +102,6 @@ const LiveSprintPanelComponent = (props: ILiveSprintPanelComponentProps) => {
         <div className={styles.heroMain}>
           <div className={styles.heroHead}>
             <Badge size='xs' variant='light' color='blue'>Open</Badge>
-            <span className={styles.heroLive}>
-              <i className={styles.pulse} />
-              In progress
-            </span>
           </div>
           <div className={styles.heroTitle}>{sprint.title}</div>
           <div className={styles.heroMeta}>
