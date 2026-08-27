@@ -18,9 +18,7 @@
     "test:auth": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-concurrency=1 --test-reporter=spec integration-tests/*.test.js\"",
     "deploy:rules": "firebase deploy --only firestore:rules",
     "deploy:indexes": "firebase deploy --only firestore:indexes",
-    "test": "npm run test:rules && npm run test:auth && npm run test:migrate",
-    "migrate": "node functions/scripts/migrate.js",
-    "test:migrate": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-reporter=spec migration-tests/*.test.js\""
+    "test": "npm run test:rules && npm run test:auth"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

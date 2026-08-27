@@ -41,42 +41,6 @@
   }
 }
 
-.heroLive {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: $baseColorDark;
-  white-space: nowrap;
-}
-
-.pulse {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: $baseColorDark;
-  animation: pulse 2.4s ease-out infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(76, 110, 245, 0.45);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(76, 110, 245, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(76, 110, 245, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pulse {
-    animation: none;
-  }
-}
-
 .heroTitle {
   font-size: 24px;
   font-weight: 600;
