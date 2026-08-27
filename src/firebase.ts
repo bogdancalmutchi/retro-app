@@ -26,10 +26,12 @@ const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 if (recaptchaSiteKey && !useEmulators) {
   if (import.meta.env.DEV) {
-    // Not a flag to turn debugging on: this makes the SDK print a debug token to
-    // the console, which has to be registered under App Check > Manage debug
-    // tokens before localhost can reach production.
-    (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    // Prefer an explicit token from .env.local over `true`. With `true` the SDK
+    // invents a token and keeps it in browser storage, so clearing storage or
+    // switching browser gives a fresh one that was never registered under
+    // App Check > Manage debug tokens, and attestation fails with a 403.
+    (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN =
+      import.meta.env.VITE_APPCHECK_DEBUG_TOKEN || true;
   }
 
   initializeAppCheck(app, {
