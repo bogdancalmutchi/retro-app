@@ -3,13 +3,12 @@ import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { Button, Modal, Textarea, Tooltip } from '@mantine/core';
 import { IconCheck, IconLock, IconPencil, IconThumbDown, IconThumbUp, IconTrash, IconX } from '@tabler/icons-react';
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { deleteDoc, deleteField, doc, increment, runTransaction, updateDoc } from 'firebase/firestore';
 import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
 
-import { INote, NoteCategory } from './ThreeColumnsGridComponent';
+import { INote, NoteCategory, VOTE_DOWN, VOTE_UP } from './ThreeColumnsGridComponent';
 import { useSprint } from '../../contexts/SprintContext';
 import { db } from '../../firebase';
-import { addItemToLocalStorage, getArrayFromLocalStorage, removeItemFromLocalStorage } from '../../utils/LocalStorage';
 import { useUser } from '../../contexts/UserContext';
 import NoteReporterComponent from '../shared/NoteReporterComponent/NoteReporterComponent';
 import DisabledTooltipWrapper from '../shared/DisabledTooltipWrapper/DisabledTooltipWrapper';
@@ -110,40 +109,34 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     }
   };
 
-  const handleThumbsUp = (note: INote) => {
-    const isNoteAlreadyLiked = getArrayFromLocalStorage('liked').includes(note.id);
-    const isNoteAlreadyDisliked = getArrayFromLocalStorage('disliked').includes(note.id);
-    if (!isNoteAlreadyLiked && !isNoteAlreadyDisliked) {
-      handleEdit(note.id, { likes: note.likes + 1 });
-      addItemToLocalStorage(note.id, 'liked');
-    } else if (isNoteAlreadyLiked) {
-      handleEdit(note.id, { likes: note.likes - 1 });
-      removeItemFromLocalStorage(note.id, 'liked');
-    } else if (isNoteAlreadyDisliked) {
-      handleEdit(note.id, { likes: note.likes + 1 });
-      handleEdit(note.id, { dislikes: note.dislikes - 1 });
-      removeItemFromLocalStorage(note.id, 'disliked');
-      addItemToLocalStorage(note.id, 'liked');
-    }
-    return null;
-  };
+  const myVote = (note: INote) => (userId && note.votes?.[userId]) || 0;
 
-  const handleThumbsDown = (note: INote) => {
-    const isNoteAlreadyLiked = getArrayFromLocalStorage('liked').includes(note.id);
-    const isNoteAlreadyDisliked = getArrayFromLocalStorage('disliked').includes(note.id);
-    if (!isNoteAlreadyDisliked && !isNoteAlreadyLiked) {
-      handleEdit(note.id, { dislikes: note.dislikes + 1 });
-      addItemToLocalStorage(note.id, 'disliked');
-    } else if (isNoteAlreadyDisliked) {
-      handleEdit(note.id, { dislikes: note.dislikes - 1 });
-      removeItemFromLocalStorage(note.id, 'disliked');
-    } else if (isNoteAlreadyLiked) {
-      handleEdit(note.id, { likes: note.likes - 1 });
-      handleEdit(note.id, { dislikes: note.dislikes + 1 });
-      removeItemFromLocalStorage(note.id, 'liked');
-      addItemToLocalStorage(note.id, 'disliked');
+  const handleVote = async (note: INote, vote: number) => {
+    if (!sprintId || !userId) return;
+    const noteRef = doc(db, 'sprints', sprintId, 'items', note.id);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(noteRef);
+        if (!snapshot.exists()) return;
+
+        const previous = snapshot.data().votes?.[userId] || 0;
+        const next = previous === vote ? 0 : vote;
+
+        const likesDelta = (next === VOTE_UP ? 1 : 0) - (previous === VOTE_UP ? 1 : 0);
+        const dislikesDelta = (next === VOTE_DOWN ? 1 : 0) - (previous === VOTE_DOWN ? 1 : 0);
+
+        const update: Record<string, unknown> = {
+          [`votes.${userId}`]: next === 0 ? deleteField() : next
+        };
+        if (likesDelta !== 0) update.likes = increment(likesDelta);
+        if (dislikesDelta !== 0) update.dislikes = increment(dislikesDelta);
+
+        transaction.update(noteRef, update);
+      });
+    } catch (error) {
+      console.error('Error saving vote:', error);
     }
-    return null;
   };
 
   const handleEditMode = (note: INote) => {
@@ -232,17 +225,17 @@ const ColumnComponent = (props: IColumnComponentProps) => {
                 <div className={styles.likesContainer}>
                   <div>
                     <IconThumbUp
-                      className={classNames(styles.thumbsIcon, { [styles.activeLikeIcon]: getArrayFromLocalStorage('liked').includes(note.id) })}
+                      className={classNames(styles.thumbsIcon, { [styles.activeLikeIcon]: myVote(note) === VOTE_UP })}
                       size={18}
-                      onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsUp(note)}
+                      onClick={() => (!isOwner(note) && isSprintOpen) && handleVote(note, VOTE_UP)}
                     />
                     <div>{note.likes}</div>
                   </div>
                   <div>
                     <IconThumbDown
-                      className={classNames(styles.thumbsIcon, { [styles.activeDislikeIcon]: getArrayFromLocalStorage('disliked').includes(note.id) })}
+                      className={classNames(styles.thumbsIcon, { [styles.activeDislikeIcon]: myVote(note) === VOTE_DOWN })}
                       size={18}
-                      onClick={() => (!isOwner(note) && isSprintOpen) && handleThumbsDown(note)}
+                      onClick={() => (!isOwner(note) && isSprintOpen) && handleVote(note, VOTE_DOWN)}
                     />
                     <div>{note.dislikes}</div>
                   </div>

@@ -3,6 +3,7 @@ import { Avatar, Container, Tabs, Text } from '@mantine/core';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useUser } from '../../../contexts/UserContext';
+import { TEAMS } from '../../../utils/teams';
 import UserMenuComponent from '../UserMenuComponent/UserMenuComponent';
 import AppLogoComponent from '../AppLogoComponent/AppLogoComponent';
 
@@ -22,7 +23,6 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
-  const tabs = ['Protoss', 'Tigers'];
   const { displayName, email, userId, team } = useUser();
 
   return (
@@ -48,7 +48,7 @@ const TabbedHeaderComponent = (props: ITabbedHeaderComponentProps) => {
             }}
           >
             <Tabs.List>
-              {tabs.map((tab) => (
+              {TEAMS.map((tab) => (
                 <Tabs.Tab value={tab} key={tab}>
                   {tab}
                 </Tabs.Tab>

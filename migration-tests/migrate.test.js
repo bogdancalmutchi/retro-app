@@ -104,7 +104,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'users', PLAIN), {
       id: PLAIN,
       displayName: 'Plain Person',
-      email: 'Plain.Person@Intralinks.com',
+      email: 'Plain.Person@Example.com',
       team: 'Tigers',
       canParty: false,
       isAdmin: false,
@@ -141,7 +141,7 @@ describe('migrate.js', () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const profile = await getDoc(doc(ctx.firestore(), 'users', PLAIN));
       assert.notEqual(profile.data().passwordHash, undefined, 'hash should be untouched');
-      assert.equal(profile.data().email, 'Plain.Person@Intralinks.com');
+      assert.equal(profile.data().email, 'Plain.Person@Example.com');
     });
 
     const accounts = await listAccounts();
@@ -165,7 +165,7 @@ describe('migrate.js', () => {
         assert.equal(profile.data().passwordHash, undefined, `${uid} hash should be gone`);
       }
       const plain = await getDoc(doc(db, 'users', PLAIN));
-      assert.equal(plain.data().email, 'plain.person@intralinks.com');
+      assert.equal(plain.data().email, 'plain.person@example.com');
     });
   });
 
@@ -174,7 +174,7 @@ describe('migrate.js', () => {
 
     const byUid = new Map((await listAccounts()).map((a) => [a.localId, a]));
     assert.ok(byUid.has(PLAIN), 'plain user should have an account');
-    assert.equal(byUid.get(PLAIN).email, 'plain.person@intralinks.com');
+    assert.equal(byUid.get(PLAIN).email, 'plain.person@example.com');
     assert.ok(byUid.has(MISMATCHED), 'mismatched user should have a pinned account');
     assert.equal(byUid.get(MISMATCHED).email, 'admin.person@admin.com');
   });

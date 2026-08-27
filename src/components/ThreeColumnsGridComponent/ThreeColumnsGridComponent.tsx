@@ -10,12 +10,16 @@ export enum NoteCategory {
   ActionItem = 'action'
 }
 
+export const VOTE_UP = 1;
+export const VOTE_DOWN = -1;
+
 export interface INote {
   id: string;
   text: string;
   category: NoteCategory;
   likes: number;
   dislikes: number;
+  votes?: Record<string, number>;
   createdBy: string;
   published: boolean;
   order: number;

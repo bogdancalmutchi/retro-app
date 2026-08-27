@@ -28,9 +28,9 @@
  * publicly readable, so they are treated as compromised.
  *
  * On --apply it prints one temporary password per user. Send them out of band
- * (Slack); the @intralinks.com mail server rejects external senders, so
- * Firebase's own reset emails never arrive. Each user is forced to choose their
- * own password at first sign-in.
+ * over chat; Firebase's own reset emails do not arrive, because the corporate
+ * mail server rejects external senders. Each user is forced to choose their own
+ * password at first sign-in.
  *
  * Safe to run more than once, though re-running rotates the temporary passwords
  * again for anyone still flagged.
