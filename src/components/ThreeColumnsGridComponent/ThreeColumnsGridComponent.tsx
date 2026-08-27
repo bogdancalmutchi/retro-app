@@ -10,12 +10,19 @@ export enum NoteCategory {
   ActionItem = 'action'
 }
 
+export const VOTE_UP = 1;
+export const VOTE_DOWN = -1;
+
 export interface INote {
   id: string;
   text: string;
   category: NoteCategory;
   likes: number;
   dislikes: number;
+  // Who voted what, keyed by uid. This is the record of who has already voted;
+  // likes/dislikes are counters kept in step with it by the same write. Notes
+  // created before this field existed simply have no map.
+  votes?: Record<string, number>;
   createdBy: string;
   published: boolean;
   order: number;

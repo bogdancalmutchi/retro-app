@@ -122,6 +122,7 @@ service cloud.firestore {
                           || touchedKeys().hasOnly([
                                'likes',
                                'dislikes',
+                               'votes',
                                'order',
                                'published',
                                'isOpen'

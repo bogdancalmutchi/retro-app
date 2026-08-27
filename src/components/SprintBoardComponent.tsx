@@ -95,6 +95,7 @@ const SprintBoardComponent = () => {
       published: category === NoteCategory.ActionItem,
       likes: 0,
       dislikes: 0,
+      votes: {},
       order: messages.length
     });
   };

@@ -18,9 +18,11 @@ import {
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
+  increment,
   setDoc,
   updateDoc
 } from 'firebase/firestore';
@@ -317,6 +319,21 @@ describe('sprints/{id}/items/', () => {
   it('lets anyone vote and reorder', async () => {
     await assertSucceeds(updateDoc(doc(bob(), 'sprints', SPRINT, 'items', NOTE), { likes: 1 }));
     await assertSucceeds(updateDoc(doc(bob(), 'sprints', SPRINT, 'items', NOTE), { order: 5 }));
+  });
+
+  it('lets a bystander record a vote in the votes map', async () => {
+    await assertSucceeds(
+      updateDoc(doc(bob(), 'sprints', SPRINT, 'items', NOTE), {
+        [`votes.${BOB}`]: 1,
+        likes: increment(1)
+      })
+    );
+    await assertSucceeds(
+      updateDoc(doc(bob(), 'sprints', SPRINT, 'items', NOTE), {
+        [`votes.${BOB}`]: deleteField(),
+        likes: increment(-1)
+      })
+    );
   });
 
   it('lets only the author edit note text', async () => {
