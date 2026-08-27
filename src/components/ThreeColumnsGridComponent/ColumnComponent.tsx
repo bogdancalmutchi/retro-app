@@ -109,15 +109,8 @@ const ColumnComponent = (props: IColumnComponentProps) => {
     }
   };
 
-  // What this user voted on a note, from the board's own data rather than from
-  // this browser: it follows them to another device and survives clearing
-  // storage.
   const myVote = (note: INote) => (userId && note.votes?.[userId]) || 0;
 
-  // Voting the same way twice takes the vote back; voting the other way swaps
-  // it. Runs in a transaction so the previous vote is read from the server
-  // instead of from a snapshot that may already be stale, which is what let two
-  // people voting at once overwrite each other with the same number.
   const handleVote = async (note: INote, vote: number) => {
     if (!sprintId || !userId) return;
     const noteRef = doc(db, 'sprints', sprintId, 'items', note.id);
