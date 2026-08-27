@@ -112,13 +112,17 @@ ship them before the bundle that depends on them.
 Each sprint document carries a `counts` map of its published notes per category,
 maintained by the `syncSprintCounts` trigger. The landing page reads it straight
 from the sprint document, so it never has to fetch the notes of every sprint on
-screen. Sprints created before the trigger existed need a one-off:
+screen.
 
-```bash
-npm run backfill:counts            # dry run, writes nothing
-npm run backfill:counts -- --apply
-```
+Sprints created before the trigger existed need a one-off run of
+`backfillSprintCounts`, which is safe to repeat: it recomputes from the notes and
+only writes where the stored counts disagree.
 
-Safe to re-run — it recomputes and skips sprints that already agree. Deploy the
-functions before the frontend, so the counts exist by the time anything reads
-them.
+It is an admin-only callable rather than a local script
+because the Admin SDK needs Application Default Credentials, which would mean
+installing gcloud or keeping a service-account key on disk. Running inside
+Firebase avoids both. Invoke it once, signed in as an admin, from the browser
+console on the deployed site.
+
+Deploy the functions and run the backfill **before** the frontend, so the counts
+exist by the time anything reads them.

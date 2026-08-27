@@ -16,7 +16,7 @@ export {
   syncUserClaims,
 } from "./auth";
 
-export { syncSprintCounts } from "./counts";
+export { backfillSprintCounts, syncSprintCounts } from "./counts";
 
 // Secret for OpenAI key
 const openAiKey = defineSecret("OPENAI_API_KEY");

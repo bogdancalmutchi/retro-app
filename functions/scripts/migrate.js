@@ -8,10 +8,11 @@
  *   Apply:
  *     npm run migrate -- --apply
  *
- * Against production, authenticate first with `firebase login` (the CLI's
- * credentials are picked up automatically), or set
- * GOOGLE_APPLICATION_CREDENTIALS. When the emulator env vars are set it targets
- * the emulator instead.
+ * Against production this needs Application Default Credentials: either
+ * `gcloud auth application-default login`, or GOOGLE_APPLICATION_CREDENTIALS
+ * pointing at a service-account key. `firebase login` is NOT enough - the CLI's
+ * credentials are not visible to the Admin SDK. With the emulator env vars set
+ * it targets the emulator instead and needs no credentials.
  *
  * For each user document it:
  *   1. deletes the leaked bcrypt passwordHash from the profile

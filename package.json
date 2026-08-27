@@ -20,7 +20,6 @@
     "deploy:indexes": "firebase deploy --only firestore:indexes",
     "test": "npm run test:rules && npm run test:auth && npm run test:migrate",
     "migrate": "node functions/scripts/migrate.js",
-    "backfill:counts": "node functions/scripts/backfill-counts.js",
     "test:migrate": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-reporter=spec migration-tests/*.test.js\""
   },
   "dependencies": {

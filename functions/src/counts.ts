@@ -1,7 +1,10 @@
+import { onCall } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 
 import { db } from "./firebaseAdmin";
+import { requireAdmin } from "./auth";
+import { allowedOrigins } from "./config";
 
 type SprintCounts = { good: number; bad: number; action: number };
 
@@ -46,5 +49,53 @@ export const syncSprintCounts = onDocumentWritten(
     });
 
     if (counts) logger.debug("Synced sprint counts", { sprintId, counts });
+  }
+);
+
+/**
+ * Admin-only: recomputes counts for every sprint, for the ones created before
+ * the trigger existed.
+ *
+ * A callable rather than a local script because the Admin SDK needs Application
+ * Default Credentials, which would mean either installing gcloud or keeping a
+ * service-account key on disk. Running inside Firebase avoids both. Safe to
+ * re-run at any time; it only writes where the stored counts disagree.
+ */
+export const backfillSprintCounts = onCall(
+  { cors: allowedOrigins, maxInstances: 1, timeoutSeconds: 300 },
+  async (request) => {
+    requireAdmin(request);
+
+    const sprints = await db.collection("sprints").get();
+    const changed: string[] = [];
+
+    for (const sprint of sprints.docs) {
+      const published = await sprint.ref
+        .collection("items")
+        .where("published", "==", true)
+        .get();
+
+      const counts = emptyCounts();
+      published.forEach((doc) => {
+        const category = doc.data().category as keyof SprintCounts;
+        if (category in counts) counts[category] += 1;
+      });
+
+      const existing = sprint.data().counts as SprintCounts | undefined;
+      const agrees =
+        existing &&
+        existing.good === counts.good &&
+        existing.bad === counts.bad &&
+        existing.action === counts.action;
+
+      if (agrees) continue;
+
+      await sprint.ref.update({ counts });
+      changed.push(sprint.id);
+    }
+
+    logger.info("Backfilled sprint counts", { total: sprints.size, changed: changed.length });
+
+    return { ok: true, total: sprints.size, updated: changed.length, changed };
   }
 );
