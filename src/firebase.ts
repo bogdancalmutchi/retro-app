@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import {
   browserSessionPersistence,
@@ -19,11 +20,29 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+const useEmulators = import.meta.env.VITE_USE_EMULATORS === 'true';
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+if (recaptchaSiteKey && !useEmulators) {
+  if (import.meta.env.DEV) {
+    // Not a flag to turn debugging on: this makes the SDK print a debug token to
+    // the console, which has to be registered under App Check > Manage debug
+    // tokens before localhost can reach production.
+    (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true
+  });
+}
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-if (import.meta.env.VITE_USE_EMULATORS === 'true') {
+if (useEmulators) {
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectFunctionsEmulator(functions, '127.0.0.1', 5001);
