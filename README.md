@@ -102,8 +102,27 @@ app.
 ```bash
 npm run deploy:indexes     # if firestore.indexes.json changed — wait for Enabled
 npm run deploy:rules       # if firestore.rules changed
+firebase deploy --only functions
 npm run deploy             # builds and publishes to gh-pages
 ```
 
 Indexes and rules are not deployed by CI, and index builds are asynchronous —
 ship them before the bundle that depends on them.
+
+Each sprint document carries a `counts` map of its published notes per category,
+maintained by the `syncSprintCounts` trigger. The landing page reads it straight
+from the sprint document, so it never has to fetch the notes of every sprint on
+screen.
+
+Sprints created before the trigger existed need a one-off run of
+`backfillSprintCounts`, which is safe to repeat: it recomputes from the notes and
+only writes where the stored counts disagree.
+
+It is an admin-only callable rather than a local script
+because the Admin SDK needs Application Default Credentials, which would mean
+installing gcloud or keeping a service-account key on disk. Running inside
+Firebase avoids both. Invoke it once, signed in as an admin, from the browser
+console on the deployed site.
+
+Deploy the functions and run the backfill **before** the frontend, so the counts
+exist by the time anything reads them.

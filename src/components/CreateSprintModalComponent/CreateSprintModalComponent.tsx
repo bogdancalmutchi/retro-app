@@ -37,7 +37,8 @@ const CreateSprintModalComponent = (props: ICreateSprintModalComponentProps) => 
         isOpen: true,
         createdAt: new Date(),
         celebrating: false,
-        summary: ''
+        summary: '',
+        counts: { good: 0, bad: 0, action: 0 }
       });
 
       // Redirect to the new sprint page

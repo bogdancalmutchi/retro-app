@@ -36,7 +36,7 @@ const hashToken = (token: string): string =>
  */
 const INVALID_INVITE = "This invite link is not valid or has expired.";
 
-const requireAdmin = (request: CallableRequest) => {
+export const requireAdmin = (request: CallableRequest) => {
   if (request.auth?.token?.isAdmin !== true) {
     throw new HttpsError("permission-denied", "Admins only.");
   }

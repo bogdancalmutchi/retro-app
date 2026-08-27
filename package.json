@@ -15,7 +15,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "test:rules": "firebase emulators:exec --only firestore \"node --test --test-reporter=spec rules-tests/*.test.js\"",
-    "test:auth": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-reporter=spec integration-tests/*.test.js\"",
+    "test:auth": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,auth \"node --test --test-concurrency=1 --test-reporter=spec integration-tests/*.test.js\"",
     "deploy:rules": "firebase deploy --only firestore:rules",
     "deploy:indexes": "firebase deploy --only firestore:indexes",
     "test": "npm run test:rules && npm run test:auth && npm run test:migrate",

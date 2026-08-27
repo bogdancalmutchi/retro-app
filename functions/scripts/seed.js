@@ -181,6 +181,7 @@ const seedSprints = async () => {
       createdAt: sprintDate(index),
       celebrating: false,
       summary: isOpen ? "" : "The team shipped the planned work and agreed to tighten up standups.",
+      counts: { good: 0, bad: 0, action: 0 },
       seeded: true,
     });
 
